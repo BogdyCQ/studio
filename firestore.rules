@@ -31,6 +31,16 @@ service cloud.firestore {
     }
 
     /**
+     * @description Controls access to the collection group 'rooms'.
+     * @path /{path=**}/rooms/{roomId}
+     * @allow (list) - Allows authenticated users to list all rooms across all locations.
+     * @principle This is necessary for the collection group query used to get all rooms.
+     */
+    match /{path=**}/rooms/{roomId} {
+        allow list: if request.auth != null;
+    }
+
+    /**
      * @description Controls access to the /locations/{locationId}/rooms/{roomId} collection.
      * @path /locations/{locationId}/rooms/{roomId}
      * @allow (create, update, delete) - Only an authenticated user can create a room within a location.

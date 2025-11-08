@@ -20,7 +20,7 @@ export function LocationsMap() {
     const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
     const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
 
-    const roomsQuery = useMemoFirebase(() => query(collection(firestore, 'rooms')), [firestore]);
+    const roomsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'rooms')), [firestore]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
     const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
