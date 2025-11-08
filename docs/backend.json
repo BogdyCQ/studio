@@ -14,6 +14,10 @@
           "type": "string",
           "description": "Name of the location."
         },
+        "address": {
+          "type": "string",
+          "description": "Full address of the location."
+        },
         "latitude": {
           "type": "number",
           "description": "Latitude coordinate of the location."
@@ -24,12 +28,13 @@
         },
         "description": {
           "type": "string",
-          "description": "A longer description of the location and its amenities."
+          "description": "A description of the location."
         }
       },
       "required": [
         "id",
         "name",
+        "address",
         "latitude",
         "longitude"
       ]
@@ -55,6 +60,10 @@
         "capacity": {
           "type": "number",
           "description": "Maximum capacity of the room."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the room."
         }
       },
       "required": [
@@ -80,11 +89,16 @@
         },
         "bedNumber": {
           "type": "string",
-          "description": "Identifier of the bed."
+          "description": "Number or identifier of the bed within the room."
         },
         "status": {
           "type": "string",
-          "description": "Current status of the bed (available, occupied, reserved)."
+          "description": "Occupancy status of the bed (available, occupied, reserved).",
+          "format": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the bed."
         }
       },
       "required": [
@@ -94,54 +108,92 @@
         "status"
       ]
     },
-    "Occupancy": {
+    "Occupant": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Occupancy",
+      "title": "Occupant",
       "type": "object",
-      "description": "Represents the occupancy of a bed for a specific period.",
+      "description": "Represents an occupant of a bed.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Occupancy entity."
+          "description": "Unique identifier for the Occupant entity."
         },
         "bedId": {
           "type": "string",
-          "description": "Reference to Bed. (Relationship: Bed 1:N Occupancy)"
+          "description": "Reference to Bed. (Relationship: Bed 1:N Occupant)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the occupant."
         },
         "startDate": {
           "type": "string",
-          "description": "Start date of the occupancy period.",
+          "description": "Start date of occupancy.",
           "format": "date-time"
         },
         "endDate": {
           "type": "string",
-          "description": "End date of the occupancy period.",
+          "description": "End date of occupancy.",
           "format": "date-time"
-        },
-        "occupantName": {
-          "type": "string",
-          "description": "Name of the occupant."
         }
       },
       "required": [
         "id",
         "bedId",
+        "name",
+        "startDate",
+        "endDate"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a booking for a bed.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Booking entity."
+        },
+        "bedId": {
+          "type": "string",
+          "description": "Reference to Bed. (Relationship: Bed 1:N Booking)"
+        },
+        "occupantId": {
+          "type": "string",
+          "description": "Reference to Occupant. (Relationship: Occupant 1:N Booking)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date of the booking.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date of the booking.",
+          "format": "date-time"
+        },
+        "bookingDate": {
+          "type": "string",
+          "description": "Date the booking was made.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "bedId",
+        "occupantId",
         "startDate",
         "endDate",
-        "occupantName"
+        "bookingDate"
       ]
     }
   },
   "auth": {
-    "providers": {
-      "oidc": {
-        "google": {
-          "enabled": true,
-          "client_id": "none",
-          "client_secret": "none"
-        }
-      }
-    }
+    "providers": [
+      "password",
+      "anonymous"
+    ]
   },
   "firestore": {
     "structure": [
@@ -152,7 +204,7 @@
           "schema": {
             "$ref": "#/backend/entities/Location"
           },
-          "description": "Stores location data. The locationId parameter uniquely identifies each location.",
+          "description": "Stores location data. Document ID is the locationId.",
           "params": [
             {
               "name": "locationId",
@@ -168,7 +220,7 @@
           "schema": {
             "$ref": "#/backend/entities/Room"
           },
-          "description": "Stores room data within a specific location. The roomId parameter uniquely identifies each room within a location.",
+          "description": "Stores room data within a specific location. Document ID is the roomId.",
           "params": [
             {
               "name": "locationId",
@@ -188,7 +240,7 @@
           "schema": {
             "$ref": "#/backend/entities/Bed"
           },
-          "description": "Stores bed data within a specific room. The bedId parameter uniquely identifies each bed within a room.",
+          "description": "Stores bed data within a specific room. Document ID is the bedId.",
           "params": [
             {
               "name": "locationId",
@@ -206,13 +258,13 @@
         }
       },
       {
-        "path": "/locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupancies/{occupancyId}",
+        "path": "/locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupants/{occupantId}",
         "definition": {
-          "entityName": "Occupancy",
+          "entityName": "Occupant",
           "schema": {
-            "$ref": "#/backend/entities/Occupancy"
+            "$ref": "#/backend/entities/Occupant"
           },
-          "description": "Stores occupancy data for a specific bed. The occupancyId parameter uniquely identifies each occupancy record.",
+          "description": "Stores occupant data for a specific bed. Document ID is the occupantId.",
           "params": [
             {
               "name": "locationId",
@@ -227,14 +279,41 @@
               "description": "Unique identifier for the bed."
             },
             {
-              "name": "occupancyId",
-              "description": "Unique identifier for the occupancy record."
+              "name": "occupantId",
+              "description": "Unique identifier for the occupant."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locations/{locationId}/rooms/{roomId}/beds/{bedId}/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking data for a specific bed. Document ID is the bookingId.",
+          "params": [
+            {
+              "name": "locationId",
+              "description": "Unique identifier for the location."
+            },
+            {
+              "name": "roomId",
+              "description": "Unique identifier for the room."
+            },
+            {
+              "name": "bedId",
+              "description": "Unique identifier for the bed."
+            },
+            {
+              "name": "bookingId",
+              "description": "Unique identifier for the booking."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to facilitate a clear hierarchy for managing locations, rooms, beds, and occupancy, optimizing for security, scalability, and ease of querying. Locations are stored at the root level, with rooms nested under locations, and beds nested under rooms. Occupancy records are nested under beds, providing a direct link between a bed and its occupancy history.\n\n**Authorization Independence (CRITICAL):**  Authorization is enforced via hierarchical path ownership. No `get()` calls are required, ensuring atomic operations.\n\n**Structural Segregation:** Each entity type (locations, rooms, beds, occupancies) resides in its own collection or subcollection, ensuring homogeneous security posture within each level of the hierarchy.\n\n**Access Modeling:**\n*   Path-Based ownership is implemented from locations down to beds. This means `/locations/{locationId}/rooms/{roomId}/beds/{bedId}` represents a clear ownership chain, where the existence of a document at each level implies ownership.\n*   Occupancies are secured by inheritance from the bed. Only users with access to the bed (implicitly through location and room) can access the occupancy records. Access to locations can be restricted based on user roles, if needed, by creating a top level `roles_location_admin/{uid}` collection.\n\n**QAPs:**\n*   The structure facilitates secure listing of locations, rooms, and beds because each resides in its own collection, making it easy to define security rules to filter based on location-specific criteria, or user roles (if implemented via a `roles_location_admin/{uid}` collection).\n*   The nested structure is optimized for listing occupancies as subcollections, which simplifies security rules based on the bed they belong to. If a user can access a bed, they can access its occupancies.\n\n**Invariants:** Ownership is inherently enforced by the path structure. Timestamps can be added to documents to track creation and modification times, ensuring data integrity."
+    "reasoning": "The Firestore data structure is designed to manage locations, rooms, beds, occupants, and bookings for the SpaceWise application. It prioritizes Authorization Independence by leveraging path-based ownership for locations and nesting rooms, beds, occupants, and bookings within. This design removes the need for `get()` calls in security rules, enabling atomic operations and simplifying debugging. The structure facilitates QAPs by segregating data based on ownership, allowing for secure list operations within user-specific paths. The chosen structure follows the principle of Structural Segregation as each collection contains documents with similar access needs. The structure incorporates path-based ownership, which simplifies security rules by making them directly attributable to the path. For example, access to the locations will be based on the user and the data stored. Location data is stored with the location id as document id. Under each locationId room collections are available and so on."
   }
 }
-    

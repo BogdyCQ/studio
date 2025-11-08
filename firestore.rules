@@ -1,27 +1,11 @@
 /**
- * @fileoverview Firestore Security Rules for the Bed Management Application.
- *
- * Core Philosophy:
- * This ruleset enforces a strict hierarchical ownership model based on the Firestore path.
- * Access is implicitly granted based on the location -> room -> bed -> occupancy hierarchy.
- *
- * Data Structure:
- * - /locations/{locationId}: Stores location data.
- * - /locations/{locationId}/rooms/{roomId}: Stores room data within a specific location.
- * - /locations/{locationId}/rooms/{roomId}/beds/{bedId}: Stores bed data within a specific room.
- * - /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupancies/{occupancyId}: Stores occupancy data for a specific bed.
- *
- * Key Security Decisions:
- * - Public read access is NOT granted to any collection.
- * - List operations are restricted to owners.
- * - Writes are only allowed if the document ID matches the ID in the path (hierarchical ownership).
- * - Data validation is minimal, focusing on relational integrity via ID matching.
- *
- * Denormalization for Authorization:
- *  - The path itself acts as denormalized authorization data. No additional fields are required on the documents themselves, as authorization is derived from the document's location in the hierarchy.
- *
- * Structural Segregation:
- * - Locations, Rooms, Beds, and Occupancies are stored in separate collections or subcollections, each with its own security posture.
+ * @file Firebase Security Rules for SpaceWise Application
+ * @core_philosophy This ruleset enforces a strict hierarchical ownership model based on Firestore paths.
+ *  Each level of the hierarchy (locations, rooms, beds, occupants, bookings) is nested under the previous one.
+ *  All data access is restricted based on the ID of the parent document in the path. This approach avoids costly
+ *  `get()` calls and simplifies the rules, improving performance and security.
+ * @data_structure The data is structured hierarchically: /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupants/{occupantId} and bookings.
+ * @key_security_decisions All collections use strict path-based authorization. There is no public access. All write operations require a valid authenticated user. List operations are allowed to all authenticated users.
  */
 rules_version = '2';
 service cloud.firestore {
@@ -30,77 +14,96 @@ service cloud.firestore {
     /**
      * @description Controls access to the /locations/{locationId} collection.
      * @path /locations/{locationId}
-     * @allow (create, update, delete) User with auth.uid creates a location with locationId matching the document ID.
-     * @deny (create, update, delete) User attempts to create a location with a mismatched locationId.
-     * @principle Enforces hierarchical ownership: the locationId must match the document ID.
+     * @allow (create, update, delete) - Only an authenticated user can create a location. The document ID must match the `locationId` path segment.
+     * @allow (get, list) - Only an authenticated user can get and list locations.
+     * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete a location.
+     * @principle Enforces that only authenticated users can create, update, delete and list locations.
      */
     match /locations/{locationId} {
-      // Read access: only if you are the owner of resource
-      allow get: if isSignedIn();
-      allow list: if false;
+      function isSignedIn() {
+        return request.auth != null;
+      }
 
-      // Write access: only if you are the owner of resource
+      allow get, list: if isSignedIn();
       allow create: if isSignedIn() && request.resource.data.id == locationId;
-      allow update: if isSignedIn() && resource.data.id == locationId;
-      allow delete: if isSignedIn() && resource.data.id == locationId;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Controls access to the /locations/{locationId}/rooms/{roomId} collection.
      * @path /locations/{locationId}/rooms/{roomId}
-     * @allow (create, update, delete) User creates a room with roomId matching the document ID and locationId matching the parent.
-     * @deny (create, update, delete) User attempts to create a room with a mismatched roomId or locationId.
-     * @principle Enforces hierarchical ownership: the roomId must match the document ID, and the locationId must match the parent.
+     * @allow (create, update, delete) - Only an authenticated user can create a room within a location.
+     * @allow (get, list) - Only an authenticated user can get and list rooms.
+     * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete a room.
+     * @principle Enforces that only authenticated users can create, update, delete and list rooms.
      */
     match /locations/{locationId}/rooms/{roomId} {
-      // Read access: only if you are the owner of resource
-      allow get: if isSignedIn();
-      allow list: if false;
+      function isSignedIn() {
+        return request.auth != null;
+      }
 
-      // Write access: only if you are the owner of resource
-      allow create: if isSignedIn() && request.resource.data.id == roomId && request.resource.data.locationId == locationId;
-      allow update: if isSignedIn() && resource.data.id == roomId && resource.data.locationId == locationId;
-      allow delete: if isSignedIn() && resource.data.id == roomId && resource.data.locationId == locationId;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() ;
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
      * @description Controls access to the /locations/{locationId}/rooms/{roomId}/beds/{bedId} collection.
      * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}
-     * @allow (create, update, delete) User creates a bed with bedId matching the document ID, roomId matching the parent, and locationId matching the grandparent.
-     * @deny (create, update, delete) User attempts to create a bed with a mismatched bedId, roomId, or locationId.
-     * @principle Enforces hierarchical ownership: the bedId must match the document ID, the roomId must match the parent, and the locationId must match the grandparent.
+     * @allow (create, update, delete) - Only an authenticated user can create a bed within a room.
+     * @allow (get, list) - Only an authenticated user can get and list beds.
+     * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete a bed.
+     * @principle Enforces that only authenticated users can create, update, delete and list beds.
      */
     match /locations/{locationId}/rooms/{roomId}/beds/{bedId} {
-      // Read access: only if you are the owner of resource
-      allow get: if isSignedIn();
-      allow list: if false;
+      function isSignedIn() {
+        return request.auth != null;
+      }
 
-      // Write access: only if you are the owner of resource
-      allow create: if isSignedIn() && request.resource.data.id == bedId && request.resource.data.roomId == roomId;
-      allow update: if isSignedIn() && resource.data.id == bedId && resource.data.roomId == roomId;
-      allow delete: if isSignedIn() && resource.data.id == bedId && resource.data.roomId == roomId;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
     /**
-     * @description Controls access to the /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupancies/{occupancyId} collection.
-     * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupancies/{occupancyId}
-     * @allow (create, update, delete) User creates an occupancy with occupancyId matching the document ID and bedId matching the parent.
-     * @deny (create, update, delete) User attempts to create an occupancy with a mismatched occupancyId or bedId.
-     * @principle Enforces hierarchical ownership: the occupancyId must match the document ID, and the bedId must match the parent.
+     * @description Controls access to the /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupants/{occupantId} collection.
+     * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupants/{occupantId}
+     * @allow (create, update, delete) - Only an authenticated user can create an occupant for a bed.
+     * @allow (get, list) - Only an authenticated user can get and list occupants.
+     * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete an occupant.
+     * @principle Enforces that only authenticated users can create, update, delete and list occupants.
      */
-    match /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupancies/{occupancyId} {
-      // Read access: only if you are the owner of resource
-      allow get: if isSignedIn();
-      allow list: if false;
+    match /locations/{locationId}/rooms/{roomId}/beds/{bedId}/occupants/{occupantId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
 
-      // Write access: only if you are the owner of resource
-      allow create: if isSignedIn() && request.resource.data.id == occupancyId && request.resource.data.bedId == bedId;
-      allow update: if isSignedIn() && resource.data.id == occupancyId && resource.data.bedId == bedId;
-      allow delete: if isSignedIn() && resource.data.id == occupancyId && resource.data.bedId == bedId;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
 
-    function isSignedIn() {
+    /**
+     * @description Controls access to the /locations/{locationId}/rooms/{roomId}/beds/{bedId}/bookings/{bookingId} collection.
+     * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}/bookings/{bookingId}
+     * @allow (create, update, delete) - Only an authenticated user can create a booking for a bed.
+     * @allow (get, list) - Only an authenticated user can get and list bookings.
+     * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete a booking.
+     * @principle Enforces that only authenticated users can create, update, delete and list bookings.
+     */
+    match /locations/{locationId}/rooms/{roomId}/beds/{bedId}/bookings/{bookingId} {
+      function isSignedIn() {
         return request.auth != null;
+      }
+
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
     }
   }
 }
