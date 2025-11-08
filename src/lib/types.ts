@@ -1,3 +1,9 @@
+export interface Reservation {
+  id: string;
+  clientName: string;
+  startDate: string;
+  endDate: string;
+}
 
 export interface Location {
   id: string;
@@ -24,7 +30,7 @@ export interface Bed {
   bedNumber: string;
   roomId: string;
   locationId: string;
-  status: 'available' | 'occupied' | 'reserved';
+  reservations?: Reservation[];
   description?: string;
 }
 

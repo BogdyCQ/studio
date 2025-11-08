@@ -1,110 +1,116 @@
-"use client";
+'use server';
 
-import Image from 'next/image';
-import Link from 'next/link';
-import { Card } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { MapPin, ChevronRight } from 'lucide-react';
-import type { Location, Bed } from '@/lib/types';
-import { useTranslation } from '@/hooks/use-translation';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, collectionGroup, query } from 'firebase/firestore';
-import { Skeleton } from '../ui/skeleton';
-import { useMemo } from 'react';
+import {
+  Firestore,
+  writeBatch,
+  doc,
+} from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+import { subDays, addDays, format } from 'date-fns';
 
-export function LocationList() {
-  const { t } = useTranslation();
-  const firestore = useFirestore();
+const locationsData = [
+    { name: 'Stichting Vluchteling - Amsterdam', address: 'Prins Hendrikkade 1, 1012 TM Amsterdam', imageId: 'amsterdam', position: { lat: 52.379189, lng: 4.899431 } },
+    { name: 'War Child Holland - Utrecht', address: 'Maliebaan 88, 3581 CW Utrecht', imageId: 'utrecht', position: { lat: 52.0913, lng: 5.1321 } },
+    { name: 'Cordaid - The Hague', address: 'Lutherse Burgwal 10, 2512 CB Den Haag', imageId: 'rotterdam', position: { lat: 52.0787, lng: 4.3081 } },
+    { name: 'Dokters van de Wereld - Rotterdam', address: 'Westersingel 101, 3015 LD Rotterdam', imageId: 'rotterdam', position: { lat: 51.9171, lng: 4.4752 } },
+    { name: 'CARE Nederland - Groningen', address: 'Oude Ebbingestraat 61, 9712 HG Groningen', imageId: 'utrecht', position: { lat: 53.2194, lng: 6.5665 } },
+    { name: 'Oxfam Novib - Eindhoven', address: 'Mauritskade 9, 5616 AA Eindhoven', imageId: 'amsterdam', position: { lat: 51.4416, lng: 5.4697 } },
+    { name: 'Plan International - Leiden', address: 'Stadhouderslaan 12, 2313 AV Leiden', imageId: 'rotterdam', position: { lat: 52.1601, lng: 4.4970 } },
+    { name: 'Save the Children - Maastricht', address: 'Avenue Ceramique 250, 6221 KX Maastricht', imageId: 'utrecht', position: { lat: 50.8484, lng: 5.6889 } },
+    { name: 'Amnesty International - Nijmegen', address: 'Keizer Karelplein 32, 6511 NH Nijmegen', imageId: 'amsterdam', position: { lat: 51.8426, lng: 5.8629 } },
+    { name: 'Hivos - Haarlem', address: 'Raamweg 16, 2011 PA Haarlem', imageId: 'rotterdam', position: { lat: 52.3874, lng: 4.6462 } },
+    { name: 'Terre des Hommes - Breda', address: 'Zandvoortselaan 59, 4835 AA Breda', imageId: 'utrecht', position: { lat: 51.5719, lng: 4.7683 } },
+    { name: 'Het Nederlandse Rode Kruis - Zwolle', address: 'Ceintuurbaan 2, 8022 AW Zwolle', imageId: 'amsterdam', position: { lat: 52.5168, lng: 6.0831 } },
+    { name: 'Unicef Nederland - Arnhem', address: 'Jansbuitensingel 29, 6811 AD Arnhem', imageId: 'rotterdam', position: { lat: 51.9851, lng: 5.8987 } },
+    { name: 'Stichting Vluchteling - Leeuwarden', address: 'Wirdumerdijk 34, 8911 CE Leeuwarden', imageId: 'utrecht', position: { lat: 53.2013, lng: 5.7999 } },
+    { name: 'Humanity House - Tilburg', address: 'Spoorlaan 350, 5038 CC Tilburg', imageId: 'amsterdam', position: { lat: 51.5555, lng: 5.0667 } }
+];
 
-  const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
-  const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
 
-  const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
-  const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+const firstNames = ["Aad", "Bram", "Cornelis", "Daan", "Eva", "Fenna", "Gijs", "Hannah", "Isa", "Jan", "Kees", "Lotte", "Mila", "Noah", "Olivia", "Pieter", "Quinty", "Ruben", "Sara", "Teun"];
+const lastNames = ["de Vries", "Jansen", "van den Berg", "Bakker", "Smit", "Meijer", "de Boer", "Mulder", "Bos", "Vos"];
 
-  const locationsWithOccupancy = useMemo(() => {
-    if (!locations || !beds) return [];
-    
-    return locations.map(location => {
-      const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
-      const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
-      const totalBeds = bedsForLocation.length;
-      const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-      return { ...location, occupancy };
+const getRandomName = () => `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+
+const generateReservations = () => {
+    const reservations = [];
+    const today = new Date();
+    // 50% chance to have any reservations at all
+    if (Math.random() > 0.5) {
+        return [];
+    }
+
+    // Reservation in the past
+    if (Math.random() > 0.3) {
+        reservations.push({
+            id: uuidv4(),
+            clientName: getRandomName(),
+            startDate: format(subDays(today, 15), 'yyyy-MM-dd'),
+            endDate: format(subDays(today, 10), 'yyyy-MM-dd'),
+        });
+    }
+    // Current reservation
+    if (Math.random() > 0.6) {
+        reservations.push({
+            id: uuidv4(),
+            clientName: getRandomName(),
+            startDate: format(subDays(today, 2), 'yyyy-MM-dd'),
+            endDate: format(addDays(today, 3), 'yyyy-MM-dd'),
+        });
+    }
+    // Future reservation
+    if (Math.random() > 0.4) {
+        reservations.push({
+            id: uuidv4(),
+            clientName: getRandomName(),
+            startDate: format(addDays(today, 7), 'yyyy-MM-dd'),
+            endDate: format(addDays(today, 12), 'yyyy-MM-dd'),
+        });
+    }
+
+    return reservations;
+};
+
+export const seedDatabase = async (db: Firestore) => {
+    const batch = writeBatch(db);
+
+    locationsData.forEach(loc => {
+        const locationId = uuidv4();
+        const locationRef = doc(db, 'locations', locationId);
+        batch.set(locationRef, { id: locationId, ...loc });
+
+        const numRooms = Math.floor(Math.random() * 4) + 2; // 2 to 5 rooms
+        for (let i = 1; i <= numRooms; i++) {
+            const roomId = uuidv4();
+            const roomRef = doc(db, 'locations', locationId, 'rooms', roomId);
+            batch.set(roomRef, {
+                id: roomId,
+                locationId: locationId,
+                name: `Room ${String.fromCharCode(64 + i)}`,
+                capacity: Math.floor(Math.random() * 6) + 2, // 2 to 7 beds
+                description: `A cozy room on the ${i === 1 ? 'first' : 'second'} floor.`
+            });
+
+            const numBeds = Math.floor(Math.random() * 4) + 2; // 2 to 5 beds
+            for (let j = 1; j <= numBeds; j++) {
+                const bedId = uuidv4();
+                const bedRef = doc(db, 'locations', locationId, 'rooms', roomId, 'beds', bedId);
+                batch.set(bedRef, {
+                    id: bedId,
+                    roomId: roomId,
+                    locationId: locationId,
+                    bedNumber: `Bed ${j}`,
+                    reservations: generateReservations(),
+                    description: `Bunk bed, top level.`
+                });
+            }
+        }
     });
-  }, [locations, beds]);
 
-
-  const loading = locationsLoading || bedsLoading;
-
-  if (loading && (!locationsWithOccupancy || locationsWithOccupancy.length === 0)) {
-    return (
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-headline mb-6"><Skeleton className="h-8 w-48" /></h1>
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="p-4">
-              <div className="flex items-center gap-4 w-full">
-                <Skeleton className="w-24 h-16 sm:w-32 sm:h-20 flex-shrink-0 rounded-md" />
-                <div className="flex-1 text-left">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
-                </div>
-                <div className="w-1/4 px-4 hidden sm:block">
-                  <Skeleton className="h-4 w-full" />
-                </div>
-                <Skeleton className="h-5 w-5" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-headline mb-6">{t('allLocations')}</h1>
-        <div className="w-full space-y-4">
-        {locationsWithOccupancy.map((location) => {
-            const placeholder = PlaceHolderImages.find(p => p.id === location.imageId);
-            return (
-            <Link key={location.id} href={`/dashboard/locations/${location.id}`} className="block">
-                <Card className="overflow-hidden transition-shadow hover:shadow-lg p-4 hover:bg-accent/50">
-                    <div className="flex items-center gap-4 w-full">
-                        {placeholder && (
-                            <div className="w-24 h-16 sm:w-32 sm:h-20 flex-shrink-0">
-                                <Image
-                                    src={placeholder.imageUrl}
-                                    alt={placeholder.description}
-                                    data-ai-hint={placeholder.imageHint}
-                                    width={128}
-                                    height={80}
-                                    className="rounded-md object-cover w-full h-full"
-                                />
-                            </div>
-                        )}
-                        <div className="flex-1 text-left">
-                            <h3 className="font-headline text-lg">{location.name}</h3>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                            <MapPin className="h-3 w-3" /> {location.address}
-                            </p>
-                        </div>
-                        <div className="w-1/4 px-4 hidden sm:block">
-                            <div className="flex items-center gap-2">
-                                <Progress value={location.occupancy} className="h-2" />
-                                <span className="text-sm font-medium">{location.occupancy}%</span>
-                            </div>
-                            <p className="text-xs text-muted-foreground text-right">{t('occupancyRate')}</p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                </Card>
-            </Link>
-            );
-        })}
-        </div>
-    </div>
-  );
-}
+    try {
+        await batch.commit();
+        console.log("Database seeded successfully!");
+    } catch (error) {
+        console.error("Error seeding database: ", error);
+    }
+};

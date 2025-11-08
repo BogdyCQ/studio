@@ -1,39 +1,32 @@
+"use client";
 
-'use client';
-
-import type { Bed, Room } from '@/lib/types';
+import type { Bed, Room, Reservation } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { cn } from '@/lib/utils';
 import { BedDouble, DoorOpen } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 type OccupancyOverviewProps = {
   rooms: Room[];
   beds: Bed[];
 };
 
-const statusConfig: Record<
-  string,
-  { label: string; dotClass: string; badgeClass: string }
-> = {
-  available: {
-    label: 'available',
-    dotClass: 'bg-green-500',
-    badgeClass:
-      'border-transparent bg-green-500/20 text-green-700 hover:bg-green-500/30 dark:text-green-300',
-  },
-  occupied: {
-    label: 'occupied',
-    dotClass: 'bg-red-500',
-    badgeClass:
-      'border-transparent bg-red-500/20 text-red-700 hover:bg-red-500/30 dark:text-red-300',
-  },
-  reserved: {
-    label: 'reserved',
-    dotClass: 'bg-yellow-400',
-    badgeClass:
-      'border-transparent bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 dark:text-yellow-300',
-  },
+const getBedStatus = (reservations: Reservation[] | undefined) => {
+    if (!reservations || reservations.length === 0) {
+        return { label: 'available', dotClass: 'bg-green-500', badgeClass: 'border-transparent bg-green-500/20 text-green-700 hover:bg-green-500/30 dark:text-green-300' };
+    }
+
+    const today = new Date();
+    const isOccupied = reservations.some(res => 
+        isWithinInterval(today, { start: parseISO(res.startDate), end: parseISO(res.endDate) })
+    );
+
+    if (isOccupied) {
+        return { label: 'occupied', dotClass: 'bg-red-500', badgeClass: 'border-transparent bg-red-500/20 text-red-700 hover:bg-red-500/30 dark:text-red-300' };
+    }
+
+    return { label: 'available', dotClass: 'bg-green-500', badgeClass: 'border-transparent bg-green-500/20 text-green-700 hover:bg-green-500/30 dark:text-green-300' };
 };
 
 export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
@@ -55,9 +48,7 @@ export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
               {beds
                 .filter((bed) => bed.roomId === room.id)
                 .map((bed) => {
-                  const config =
-                    statusConfig[bed.status as keyof typeof statusConfig] ||
-                    statusConfig.available;
+                  const statusConfig = getBedStatus(bed.reservations);
                   return (
                     <div
                       key={bed.id}
@@ -70,16 +61,16 @@ export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
                             {bed.bedNumber}
                           </p>
                           <div
-                            className={cn('h-2.5 w-2.5 rounded-full', config.dotClass)}
+                            className={cn('h-2.5 w-2.5 rounded-full', statusConfig.dotClass)}
                           ></div>
                         </div>
                         {bed.description && <p className="text-xs text-muted-foreground mb-2">{bed.description}</p>}
                       </div>
                       <Badge
                         variant="outline"
-                        className={cn('capitalize w-full justify-center', config.badgeClass)}
+                        className={cn('capitalize w-full justify-center', statusConfig.badgeClass)}
                       >
-                        {t(config.label)}
+                        {t(statusConfig.label)}
                       </Badge>
                     </div>
                   );

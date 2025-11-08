@@ -1,10 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, ReactNode } from 'react';
-import { collection, collectionGroup, query } from 'firebase/firestore';
+import React, { createContext, useContext, useMemo, ReactNode, useEffect } from 'react';
+import { collection, collectionGroup, query, getDocs } from 'firebase/firestore';
 import { useCollection, useFirestore } from '@/firebase';
 import type { Location, Room, Bed } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { seedDatabase } from '@/lib/seed';
 
 interface DataContextType {
   locations: Location[] | null;
@@ -26,6 +27,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const bedsQuery = useMemo(() => query(collectionGroup(firestore, 'beds')), [firestore]);
   const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+
+  useEffect(() => {
+    const checkAndSeed = async () => {
+      if (!locationsLoading && locations && locations.length === 0) {
+        console.log("No locations found. Seeding database...");
+        await seedDatabase(firestore);
+        // This is a bit of a hack to force a reload to get the new data.
+        // In a real app, you might want to refetch queries instead.
+        window.location.reload();
+      }
+    };
+    checkAndSeed();
+  }, [locations, locationsLoading, firestore]);
 
   const isLoading = locationsLoading || roomsLoading || bedsLoading;
 

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
@@ -6,23 +5,34 @@ import { Skeleton } from '../ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
 import { useData } from '../providers/data-provider';
+import { isWithinInterval, parseISO } from 'date-fns';
 
 export function LocationsMap() {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     const router = useRouter();
-    const { locations, beds, rooms, isLoading } = useData();
+    const { locations, beds, isLoading } = useData();
 
     const locationsWithOccupancy = useMemo(() => {
-        if (!locations || !beds || !rooms) return [];
+        if (!locations || !beds) return [];
         
         return locations.map(location => {
-          const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
-          const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
-          const totalBeds = bedsForLocation.length;
-          const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
-          return { ...location, occupancy };
+            const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
+            const totalBeds = bedsForLocation.length;
+            if (totalBeds === 0) {
+                return { ...location, occupancy: 0 };
+            }
+
+            const today = new Date();
+            const occupiedBeds = bedsForLocation.filter(bed => {
+                return bed.reservations?.some(res => 
+                    isWithinInterval(today, { start: parseISO(res.startDate), end: parseISO(res.endDate) })
+                );
+            }).length;
+            
+            const occupancy = Math.round((occupiedBeds / totalBeds) * 100);
+            return { ...location, occupancy };
         });
-    }, [locations, rooms, beds]);
+    }, [locations, beds]);
 
     if (!apiKey) {
         return (

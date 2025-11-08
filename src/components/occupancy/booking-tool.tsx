@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -6,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -17,6 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -36,9 +36,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { suggestBestBed, SuggestBestBedOutput } from "@/ai/flows/suggest-best-bed";
-import { useFirestore, useUser, addDocumentNonBlocking } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { useFirestore, updateDocumentNonBlocking } from "@/firebase";
+import { doc, arrayUnion } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { v4 as uuidv4 } from "uuid";
+
 
 type BookingToolProps = {
   locationId: string;
@@ -52,11 +54,10 @@ export function BookingTool({ locationId }: BookingToolProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   
   const firestore = useFirestore();
-  const { user } = useUser();
   const { toast } = useToast();
 
-
   const FormSchema = z.object({
+    clientName: z.string().min(2, { message: "Name must be at least 2 characters." }),
     startDate: z.date({
       required_error: "A start date is required.",
     }),
@@ -85,10 +86,10 @@ export function BookingTool({ locationId }: BookingToolProps) {
     
     try {
         const result = await suggestBestBed(input);
-        if (result.bedId && result.bedId !== 'null') {
+        if (result.bedId && result.bedId !== 'null' && result.roomId) {
             setSuggestion(result);
         } else {
-            setError(result.reason || "No bed available.");
+            setError(result.reason || "No bed available for the selected dates.");
         }
     } catch (e) {
         setError("An error occurred while fetching suggestion.");
@@ -99,22 +100,25 @@ export function BookingTool({ locationId }: BookingToolProps) {
   }
 
   const handleBookNow = async () => {
-    if (!suggestion || !suggestion.bedId || !user || !form.getValues("startDate") || !form.getValues("endDate")) return;
+    const { startDate, endDate, clientName } = form.getValues();
+    if (!suggestion || !suggestion.bedId || !suggestion.roomId || !startDate || !endDate || !clientName) return;
 
-    const bookingData = {
-      bedId: suggestion.bedId,
-      userId: user.uid,
-      startDate: format(form.getValues("startDate"), 'yyyy-MM-dd'),
-      endDate: format(form.getValues("endDate"), 'yyyy-MM-dd'),
-      locationId: locationId,
+    const newReservation = {
+      id: uuidv4(),
+      clientName: clientName,
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd'),
     };
 
-    const bookingsCol = collection(firestore, `users/${user.uid}/bookings`);
-    addDocumentNonBlocking(bookingsCol, bookingData);
+    const bedRef = doc(firestore, `locations/${locationId}/rooms/${suggestion.roomId}/beds`, suggestion.bedId);
+
+    updateDocumentNonBlocking(bedRef, {
+      reservations: arrayUnion(newReservation)
+    });
     
     toast({
       title: "Booking Confirmed!",
-      description: `Bed ${suggestion.bedId} has been booked.`,
+      description: `Bed ${suggestion.bedId} has been reserved for ${clientName}.`,
     });
     
     setShowConfirmation(false);
@@ -126,6 +130,22 @@ export function BookingTool({ locationId }: BookingToolProps) {
     <div className="space-y-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="clientName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('clientName')}</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder={t('enterClientName')} className="pl-10" {...field} />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           <FormField
             control={form.control}
             name="startDate"
@@ -236,9 +256,9 @@ export function BookingTool({ locationId }: BookingToolProps) {
       <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
+            <AlertDialogTitle>Confirm Reservation</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to book bed {suggestion?.bedId} from {form.getValues("startDate") ? format(form.getValues("startDate"), "PPP") : ''} to {form.getValues("endDate") ? format(form.getValues("endDate"), "PPP") : ''}?
+              Are you sure you want to reserve bed {suggestion?.bedId} for {form.getValues("clientName")} from {form.getValues("startDate") ? format(form.getValues("startDate"), "PPP") : ''} to {form.getValues("endDate") ? format(form.getValues("endDate"), "PPP") : ''}?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
