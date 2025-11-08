@@ -9,6 +9,7 @@ import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Icons } from "@/components/icons";
+import { LoginHandler } from "@/components/login-handler";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -43,22 +44,25 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm shadow-2xl">
-        <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-                <Icons.logo className="h-12 w-12 text-primary" />
-            </div>
-          <CardTitle className="text-3xl font-headline">{t('appName')}</CardTitle>
-          <CardDescription className="pt-2">{t('signIn')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={handleSignIn} className="w-full" variant="default" size="lg">
-            <Icons.google className="mr-2 h-5 w-5" />
-            {t('signInWithGoogle')}
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <>
+      <LoginHandler />
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-sm shadow-2xl">
+          <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                  <Icons.logo className="h-12 w-12 text-primary" />
+              </div>
+            <CardTitle className="text-3xl font-headline">{t('appName')}</CardTitle>
+            <CardDescription className="pt-2">{t('signIn')}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={handleSignIn} className="w-full" variant="default" size="lg">
+              <Icons.google className="mr-2 h-5 w-5" />
+              {t('signInWithGoogle')}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }
