@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth as useAppAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/firebase";
-import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInAnonymously } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Icons } from "@/components/icons";
@@ -25,11 +25,10 @@ export default function LoginPage() {
   
   const handleSignIn = async () => {
     if (!auth) return;
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithRedirect(auth, provider);
+      await signInAnonymously(auth);
     } catch (error) {
-      console.error("Error signing in with Google", error);
+      console.error("Error signing in anonymously", error);
     }
   };
 
@@ -57,8 +56,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <Button onClick={handleSignIn} className="w-full" variant="default" size="lg">
-              <Icons.google className="mr-2 h-5 w-5" />
-              {t('signInWithGoogle')}
+              {t('signInAsGuest')}
             </Button>
           </CardContent>
         </Card>
