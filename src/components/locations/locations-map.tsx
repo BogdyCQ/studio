@@ -70,11 +70,13 @@ export function LocationsMap() {
                                 position={location.position}
                                 onClick={() => router.push(`/dashboard/locations/${location.id}`)}
                             >
-                                <div className="relative w-12 h-12 flex items-center justify-center cursor-pointer">
-                                    <MapPin className="absolute h-12 w-12 text-primary drop-shadow-lg" fill="white" />
-                                    <span className="relative z-10 text-primary-foreground font-bold text-sm pb-2">
-                                        {availableBeds}
-                                    </span>
+                                <div className="flex flex-col items-center cursor-pointer group">
+                                    <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-full border-2 border-primary-foreground shadow-lg transform group-hover:scale-110 transition-transform duration-200">
+                                        <span className="text-primary-foreground font-bold text-base">
+                                            {availableBeds}
+                                        </span>
+                                    </div>
+                                    <div className="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-primary transform group-hover:scale-110 transition-transform duration-200"></div>
                                 </div>
                             </AdvancedMarker>
                         )
@@ -84,4 +86,5 @@ export function LocationsMap() {
         </div>
     );
 }
+
 
