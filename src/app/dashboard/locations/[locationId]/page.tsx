@@ -2,13 +2,13 @@
 'use client';
 
 import { useTranslation } from "@/hooks/use-translation";
-import { notFound, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
 import { AvailabilityCalendar } from "@/components/occupancy/availability-calendar";
 import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BedDouble, CalendarDays, Bot, Map } from "lucide-react";
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { BedDouble, CalendarDays, Bot } from "lucide-react";
+import { useDoc, useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
 import { doc, collection, query, where, getDocs, collectionGroup } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
@@ -34,14 +34,22 @@ export default function LocationPage({ params: { locationId } }: { params: { loc
 
             setBedsLoading(true);
             const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
+            
             try {
                 const querySnapshot = await getDocs(bedsCollectionGroup);
                 const allBeds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bed));
                 setBeds(allBeds);
             } catch (error) {
-                console.error("Error fetching beds:", error);
+                 // Create and emit a contextual permission error
+                const permissionError = new FirestorePermissionError({
+                    path: `locations/${locationId}/rooms/.../beds`, // Representing the collection group query
+                    operation: 'list',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                console.error("Error fetching beds:", error); // Keep for local debugging, but emitter handles overlay
+            } finally {
+                setBedsLoading(false);
             }
-            setBedsLoading(false);
         };
 
         fetchBeds();
