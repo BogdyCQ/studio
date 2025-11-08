@@ -6,13 +6,14 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, ChevronRight } from 'lucide-react';
-import type { Location, Bed, Room } from '@/lib/types';
+import type { Location, Bed } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useEffect, useMemo } from 'react';
+import { seedDatabase } from '@/lib/seed';
 
 export function LocationList() {
   const { t } = useTranslation();
@@ -21,31 +22,32 @@ export function LocationList() {
   const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
   const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
 
-  const roomsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'rooms')), [firestore]);
-  const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
-
   const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
   const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+
+  useEffect(() => {
+    if (!locationsLoading && locations && locations.length === 0 && firestore) {
+      console.log('No locations found. Seeding database...');
+      seedDatabase(firestore);
+    }
+  }, [locations, locationsLoading, firestore]);
   
   const locationsWithOccupancy = useMemo(() => {
-    if (!locations || !beds || !rooms) return [];
+    if (!locations || !beds) return [];
     
     return locations.map(location => {
-      const roomsInLocation = rooms.filter(room => room.locationId === location.id);
-      const roomIdsInLocation = roomsInLocation.map(room => room.id);
-      const bedsForLocation = beds.filter(bed => roomIdsInLocation.includes(bed.roomId));
-      
+      const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
       const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
       const totalBeds = bedsForLocation.length;
       const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
       return { ...location, occupancy };
     });
-  }, [locations, rooms, beds]);
+  }, [locations, beds]);
 
 
-  const loading = locationsLoading || bedsLoading || roomsLoading;
+  const loading = locationsLoading || bedsLoading;
 
-  if (loading && (!locations || locations.length === 0)) {
+  if (loading && (!locationsWithOccupancy || locationsWithOccupancy.length === 0)) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-headline mb-6"><Skeleton className="h-8 w-48" /></h1>
