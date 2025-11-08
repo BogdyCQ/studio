@@ -15,9 +15,8 @@ import { MapPin, ChevronRight } from 'lucide-react';
 import type { Location } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function LocationList() {
