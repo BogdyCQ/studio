@@ -1,3 +1,4 @@
+
 "use client";
 
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
@@ -7,9 +8,7 @@ import getConfig from 'next/config';
 
 export function LocationMap({ location }: { location: Location }) {
     const { publicRuntimeConfig } = getConfig();
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    console.log(apiKey);
-    console.log('test');
+    const apiKey = publicRuntimeConfig.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
         return (

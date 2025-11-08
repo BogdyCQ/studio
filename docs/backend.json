@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Location": {
@@ -18,13 +19,19 @@
           "type": "string",
           "description": "Full address of the location."
         },
-        "latitude": {
-          "type": "number",
-          "description": "Latitude coordinate of the location."
-        },
-        "longitude": {
-          "type": "number",
-          "description": "Longitude coordinate of the location."
+        "position": {
+          "type": "object",
+          "properties": {
+            "lat": {
+              "type": "number",
+              "description": "Latitude coordinate of the location."
+            },
+            "lng": {
+              "type": "number",
+              "description": "Longitude coordinate of the location."
+            }
+          },
+          "required": ["lat", "lng"]
         },
         "description": {
           "type": "string",
@@ -35,8 +42,7 @@
         "id",
         "name",
         "address",
-        "latitude",
-        "longitude"
+        "position"
       ]
     },
     "Room": {

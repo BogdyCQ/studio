@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTranslation } from "@/hooks/use-translation";
@@ -38,9 +39,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
                 return;
             }
             
-            // In Firestore, you cannot query across subcollections with a simple 'in' query on the parent ID.
-            // The best practice is to either fetch beds for each room individually or use a collection group query.
-            // Let's use a collection group query for efficiency.
             const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', params.locationId));
             
             try {
