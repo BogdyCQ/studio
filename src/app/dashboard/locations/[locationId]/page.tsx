@@ -1,7 +1,7 @@
 
 'use client';
 
-import { use } from 'react';
+import { use, useMemo } from 'react';
 import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
@@ -14,22 +14,31 @@ import { collection, query, collectionGroup, where } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo } from "react";
 
 export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
     const { locationId } = use(params);
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    const locationsQuery = firestore ? query(collection(firestore, 'locations'), where('id', '==', locationId)) : null;
+    const locationsQuery = useMemo(() => {
+        if (!firestore || !locationId) return null;
+        return query(collection(firestore, 'locations'), where('id', '==', locationId));
+    }, [firestore, locationId]);
+
     const { data: locationsData, loading: locationsLoading } = useCollection<Location>(locationsQuery);
     
     const location = useMemo(() => (locationsData && locationsData.length > 0 ? locationsData[0] : null), [locationsData]);
 
-    const roomsQuery = firestore ? query(collectionGroup(firestore, 'rooms'), where('locationId', '==', locationId)) : null;
+    const roomsQuery = useMemo(() => {
+        if (!firestore || !locationId) return null;
+        return query(collectionGroup(firestore, 'rooms'), where('locationId', '==', locationId));
+    }, [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
-    const bedsQuery = firestore ? query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId)) : null;
+    const bedsQuery = useMemo(() => {
+        if (!firestore || !locationId) return null;
+        return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
+    }, [firestore, locationId]);
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
     const isLoading = locationsLoading || roomsLoading || bedsLoading;
