@@ -1,0 +1,267 @@
+{
+  "entities": {
+    "Location": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Location",
+      "type": "object",
+      "description": "Represents a physical location with rooms and beds.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Location entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the location."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "Latitude coordinate of the location."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Longitude coordinate of the location."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the location."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "latitude",
+        "longitude"
+      ]
+    },
+    "Room": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Room",
+      "type": "object",
+      "description": "Represents a room within a location.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Room entity."
+        },
+        "locationId": {
+          "type": "string",
+          "description": "Reference to Location. (Relationship: Location 1:N Room)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the room."
+        },
+        "capacity": {
+          "type": "number",
+          "description": "Maximum capacity of the room."
+        }
+      },
+      "required": [
+        "id",
+        "locationId",
+        "name",
+        "capacity"
+      ]
+    },
+    "Bed": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Bed",
+      "type": "object",
+      "description": "Represents a bed within a room.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Bed entity."
+        },
+        "roomId": {
+          "type": "string",
+          "description": "Reference to Room. (Relationship: Room 1:N Bed)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the bed or bed identifier."
+        },
+        "status": {
+          "type": "string",
+          "description": "Occupancy status of the bed (available, occupied, reserved)."
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "name",
+        "status"
+      ]
+    },
+    "Booking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Booking",
+      "type": "object",
+      "description": "Represents a booking for a bed.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Booking entity."
+        },
+        "bedId": {
+          "type": "string",
+          "description": "Reference to Bed. (Relationship: Bed 1:N Booking)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date of the booking.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date of the booking.",
+          "format": "date-time"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Booking). The user that made the booking."
+        }
+      },
+      "required": [
+        "id",
+        "bedId",
+        "startDate",
+        "endDate",
+        "userId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity. This could be the Firebase Auth UID."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user."
+        }
+      },
+      "required": [
+        "id",
+        "email"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/locations/{locationId}",
+        "definition": {
+          "entityName": "Location",
+          "schema": {
+            "$ref": "#/backend/entities/Location"
+          },
+          "description": "Stores location data. Includes denormalized 'locationId' in child collections for authorization independence.",
+          "params": [
+            {
+              "name": "locationId",
+              "description": "Unique identifier for the location."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locations/{locationId}/rooms/{roomId}",
+        "definition": {
+          "entityName": "Room",
+          "schema": {
+            "$ref": "#/backend/entities/Room"
+          },
+          "description": "Stores room data within a location. Includes denormalized 'locationId' for authorization independence.",
+          "params": [
+            {
+              "name": "locationId",
+              "description": "Unique identifier for the location."
+            },
+            {
+              "name": "roomId",
+              "description": "Unique identifier for the room."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/locations/{locationId}/rooms/{roomId}/beds/{bedId}",
+        "definition": {
+          "entityName": "Bed",
+          "schema": {
+            "$ref": "#/backend/entities/Bed"
+          },
+          "description": "Stores bed data within a room. Includes denormalized 'locationId' and 'roomId' for authorization independence.",
+          "params": [
+            {
+              "name": "locationId",
+              "description": "Unique identifier for the location."
+            },
+            {
+              "name": "roomId",
+              "description": "Unique identifier for the room."
+            },
+            {
+              "name": "bedId",
+              "description": "Unique identifier for the bed."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user (Firebase Auth UID)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/bookings/{bookingId}",
+        "definition": {
+          "entityName": "Booking",
+          "schema": {
+            "$ref": "#/backend/entities/Booking"
+          },
+          "description": "Stores booking data for a specific user. Path-based ownership ensures only the user can access their bookings.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "Unique identifier for the user (Firebase Auth UID) who made the booking."
+            },
+            {
+              "name": "bookingId",
+              "description": "Unique identifier for the booking."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage locations, rooms, beds, bookings, and user data for the SpaceWise application. It emphasizes authorization independence and supports QAPs (Rules are not filters) by denormalizing authorization data and segregating data based on access requirements.\n\n**Authorization Independence and QAPs:**\n\n*   **Locations, Rooms, and Beds:** Each location acts as a container for rooms, and each room acts as a container for beds. This establishes clear ownership (path-based ownership) with implicit `list` access managed by the user's ID. Since locations, rooms, and beds are not user-specific but globally managed, there's no user-specific ownership.  Authorization is controlled at the Booking level.\n*   **Bookings:** Bookings are stored under the `/users/{userId}/bookings/{bookingId}` path, ensuring that each booking is directly associated with the user who created it. This path-based ownership simplifies security rules and ensures that only the user who created the booking, or an admin (if implemented later using a global role), can access or modify it. This structure inherently supports QAPs because listing bookings is naturally filtered by the user ID in the path.\n\nThis design promotes authorization independence by avoiding `get()` calls in security rules. Each entity contains the necessary context for authorization, enabling atomic operations and simplifying debugging. The segregation of data into user-specific collections (e.g., `/users/{userId}/bookings`) and global collections (e.g., `/locations`) ensures that security rules can be applied consistently across all documents within a collection, supporting the QAPs principle."
+  }
+}
