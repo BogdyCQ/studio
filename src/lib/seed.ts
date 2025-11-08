@@ -97,8 +97,9 @@ export async function seedDatabase(firestore: Firestore) {
 
     for (const location of locations) {
         const locationRef = doc(firestore, "locations", location.id);
-        const occupancy = Math.floor(Math.random() * 80) + 10; // 10-90%
-        batch.set(locationRef, { ...location, occupancy });
+        
+        let totalBeds = 0;
+        let occupiedBeds = 0;
 
         const numRooms = Math.floor(Math.random() * 5) + 3; // 3-7 rooms
         for (let i = 1; i <= numRooms; i++) {
@@ -112,19 +113,30 @@ export async function seedDatabase(firestore: Firestore) {
             };
             batch.set(roomRef, room);
 
-            const numBeds = 4; // All rooms have 4 beds
-            for (let j = 1; j <= numBeds; j++) {
+            const numBedsInRoom = 4;
+            totalBeds += numBedsInRoom;
+
+            for (let j = 1; j <= numBedsInRoom; j++) {
                 const bedId = `bed-${j}`;
                 const bedRef = doc(roomRef, "beds", bedId);
+                const status = bedStatuses[Math.floor(Math.random() * bedStatuses.length)];
+                
+                if (status === 'occupied') {
+                    occupiedBeds++;
+                }
+
                 const bed: Omit<Bed, 'id'> = {
                     roomId: roomId,
                     bedNumber: `Bed ${String.fromCharCode(64 + j)}`, // A, B, C, D
-                    status: bedStatuses[Math.floor(Math.random() * bedStatuses.length)],
+                    status: status,
                     description: `Standaard eenpersoonsbed in kamer ${100+i}.`
                 };
                 batch.set(bedRef, bed);
             }
         }
+
+        const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+        batch.set(locationRef, { ...location, occupancy });
     }
 
     try {
