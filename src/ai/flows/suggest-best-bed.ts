@@ -52,7 +52,20 @@ const getBedsForLocation = ai.defineTool(
       .where('locationId', '==', locationId);
     
     const querySnapshot = await bedsQuery.get();
-    const beds = querySnapshot.docs.map(doc => doc.data() as Bed);
+    
+    // Sanitize the data to return plain objects
+    const beds = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: data.id,
+        bedNumber: data.bedNumber,
+        roomId: data.roomId,
+        locationId: data.locationId,
+        description: data.description,
+        reservations: data.reservations || []
+      } as Bed;
+    });
+
     console.log(`Tool: Found ${beds.length} beds.`);
     return beds;
   }
@@ -121,54 +134,29 @@ const suggestBestBedFlow = ai.defineFlow(
   async (input) => {
     console.log('Flow: Starting suggestion flow with input:', input);
     const llmResponse = await prompt(input);
-    const toolCalls = llmResponse.toolCalls();
+    const toolCalls = llmResponse.toolRequests();
 
     if (toolCalls.length > 0) {
       console.log(`Flow: LLM requested ${toolCalls.length} tool(s).`);
-      const toolOutput = await Promise.all(
-        toolCalls.map(async (toolCall) => {
-          console.log(`Flow: Executing tool: ${toolCall.tool.name}`);
-          const output = await toolCall.run();
-          return {
-            tool: toolCall.tool.name,
-            result: output
-          };
-        })
-      );
-      console.log('Flow: Tool execution finished. Sending results back to LLM.');
-
-      // Because our prompt is simple, we can do the logic here instead of another LLM call.
-      const beds = toolOutput[0].result as Bed[];
-      if (!beds || beds.length === 0) {
-        return { bedId: 'null', roomId: 'null', reason: 'This location has no beds configured.' };
-      }
-
-      const desiredInterval = { start: parseISO(input.startDate), end: parseISO(input.endDate) };
-
-      for (const bed of beds) {
-        const isBedAvailable = !bed.reservations?.some(reservation =>
-          areIntervalsOverlapping(
-            desiredInterval,
-            { start: parseISO(reservation.startDate), end: parseISO(reservation.endDate) },
-            { inclusive: true }
-          )
-        );
-
-        if (isBedAvailable) {
-          console.log(`Flow: Found available bed: ${bed.id}`);
-          return {
-            bedId: bed.id,
-            roomId: bed.roomId,
-            reason: `Bed ${bed.bedNumber} is available for the selected dates.`
-          };
-        }
-      }
       
-      console.log('Flow: No available beds found.');
-      return { bedId: 'null', roomId: 'null', reason: 'No beds are available for the selected date range.' };
+      const toolResponses = [];
+      for (const toolRequest of toolCalls) {
+        console.log(`Flow: Executing tool: ${toolRequest.name}`);
+        const output = await toolRequest.run();
+        toolResponses.push({
+          toolRequest,
+          output,
+        });
+      }
+
+      console.log('Flow: Tool execution finished. Sending results back to LLM for final processing.');
+      
+      // Let the LLM process the tool output to give the final answer
+      const finalResponse = await llmResponse.continue(toolResponses);
+      return finalResponse.output()!;
 
     } else {
-        // If the LLM returns a response without calling a tool (e.g., if it can infer from the prompt)
+        // If the LLM returns a response without calling a tool
         const directOutput = llmResponse.output();
         if (directOutput) {
             console.log('Flow: LLM provided a direct answer.');
