@@ -6,9 +6,8 @@ import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
 import { AvailabilityCalendar } from "@/components/occupancy/availability-calendar";
-import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BedDouble, CalendarDays, Bot } from "lucide-react";
+import { BedDouble, CalendarDays } from "lucide-react";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useData } from '@/components/providers/data-provider';
@@ -66,14 +65,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
                                 <Skeleton className="h-64 w-full" />
                             </CardContent>
                         </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Skeleton className="h-64 w-full" />
-                            </CardContent>
-                        </Card>
                     </div>
                 </div>
             </div>
@@ -119,17 +110,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <AvailabilityCalendar beds={bedsForLocation} rooms={roomsForLocation} />
-                            </CardContent>
-                        </Card>
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                    <Bot /> {t('bookingTool')}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <BookingTool locationId={location.id} />
+                                <AvailabilityCalendar locationId={location.id} beds={bedsForLocation} rooms={roomsForLocation} />
                             </CardContent>
                         </Card>
                     </div>
