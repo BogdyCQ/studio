@@ -5,7 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useState, useMemo } from "react";
 import type { DateRange } from "react-day-picker";
 import { addDays, areIntervalsOverlapping, eachDayOfInterval, format, isSameDay, parseISO, startOfDay } from "date-fns";
-import type { Bed } from "@/lib/types";
+import type { Bed, Room } from "@/lib/types";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,7 @@ import { useTranslation } from "@/hooks/use-translation";
 
 type AvailabilityCalendarProps = {
   beds: Bed[];
+  rooms: Room[];
 };
 
 const getBedStatusForRange = (bed: Bed, range: DateRange) => {
@@ -32,7 +33,7 @@ const getBedStatusForRange = (bed: Bed, range: DateRange) => {
 };
 
 
-export function AvailabilityCalendar({ beds }: AvailabilityCalendarProps) {
+export function AvailabilityCalendar({ beds, rooms }: AvailabilityCalendarProps) {
   const { t } = useTranslation();
   const today = startOfDay(new Date());
   const defaultSelected: DateRange = {
@@ -88,11 +89,20 @@ export function AvailabilityCalendar({ beds }: AvailabilityCalendarProps) {
 
   const bedStatuses = useMemo(() => {
     if (!range) return [];
-    return beds.map(bed => ({
-        ...bed,
-        status: getBedStatusForRange(bed, range)
-    })).sort((a,b) => a.bedNumber.localeCompare(b.bedNumber));
-  }, [beds, range]);
+    return beds.map(bed => {
+        const room = rooms.find(r => r.id === bed.roomId);
+        return {
+            ...bed,
+            roomName: room ? room.name : 'Unknown Room',
+            status: getBedStatusForRange(bed, range)
+        }
+    }).sort((a,b) => {
+        if (a.roomName !== b.roomName) {
+            return a.roomName.localeCompare(b.roomName);
+        }
+        return a.bedNumber.localeCompare(b.bedNumber);
+    });
+  }, [beds, rooms, range]);
 
   return (
     <div className="space-y-4">
@@ -127,8 +137,11 @@ export function AvailabilityCalendar({ beds }: AvailabilityCalendarProps) {
                 <div className="space-y-2">
                     {bedStatuses.map(bed => (
                         <div key={bed.id} className="flex items-center justify-between text-sm">
-                            <span>{bed.bedNumber}</span>
-                            <Badge variant="outline" className={cn('capitalize', bed.status.badgeClass)}>
+                            <span className="truncate">
+                                <span className="font-medium">{bed.roomName}</span>
+                                <span className="text-muted-foreground"> - {bed.bedNumber}</span>
+                            </span>
+                            <Badge variant="outline" className={cn('capitalize flex-shrink-0', bed.status.badgeClass)}>
                                 {t(bed.status.label)}
                             </Badge>
                         </div>

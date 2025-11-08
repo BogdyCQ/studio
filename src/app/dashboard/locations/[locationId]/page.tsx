@@ -119,7 +119,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <AvailabilityCalendar beds={bedsForLocation} />
+                                <AvailabilityCalendar beds={bedsForLocation} rooms={roomsForLocation} />
                             </CardContent>
                         </Card>
                         <Card>
