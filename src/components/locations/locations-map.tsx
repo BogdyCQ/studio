@@ -59,17 +59,29 @@ export function LocationsMap() {
                     disableDefaultUI={true}
                     className="h-full w-full"
                 >
-                    {(locations || []).map((location) => (
-                        <AdvancedMarker 
-                            key={location.id} 
-                            position={location.position}
-                            onClick={() => router.push(`/dashboard/locations/${location.id}`)}
-                        >
-                            <MapPin className="h-10 w-10 text-primary drop-shadow-lg cursor-pointer" fill="white" />
-                        </AdvancedMarker>
-                    ))}
+                    {(locations || []).map((location) => {
+                        // Assuming an average of 20 beds per location for this calculation
+                        const totalBeds = 20; 
+                        const availableBeds = Math.round(totalBeds * (1 - location.occupancy / 100));
+
+                        return (
+                            <AdvancedMarker 
+                                key={location.id} 
+                                position={location.position}
+                                onClick={() => router.push(`/dashboard/locations/${location.id}`)}
+                            >
+                                <div className="relative w-12 h-12 flex items-center justify-center cursor-pointer">
+                                    <MapPin className="absolute h-12 w-12 text-primary drop-shadow-lg" fill="white" />
+                                    <span className="relative z-10 text-primary-foreground font-bold text-sm pb-2">
+                                        {availableBeds}
+                                    </span>
+                                </div>
+                            </AdvancedMarker>
+                        )
+                    })}
                 </Map>
             </APIProvider>
         </div>
     );
 }
+
