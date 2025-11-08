@@ -15,8 +15,8 @@ import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { use, useEffect, useState } from "react";
 
-export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
-    const { locationId } = use(params);
+export default function LocationPage({ params }: { params: { locationId: string } }) {
+    const { locationId } = params;
     const { t } = useTranslation();
     const firestore = useFirestore();
 
@@ -118,6 +118,7 @@ export default function LocationPage({ params }: { params: Promise<{ locationId:
                         {location.name}
                     </h1>
                     <p className="text-muted-foreground">{location.address}</p>
+                    {location.description && <p className="text-foreground max-w-prose">{location.description}</p>}
                 </div>
                 <Card className="h-96">
                     <LocationMap location={location} />
@@ -163,4 +164,3 @@ export default function LocationPage({ params }: { params: Promise<{ locationId:
         </div>
     );
 }
-

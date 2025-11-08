@@ -9,6 +9,7 @@ export interface Location {
   };
   occupancy: number; // Percentage
   imageId: string;
+  description?: string;
 }
 
 export interface Room {
@@ -16,6 +17,7 @@ export interface Room {
   name: string;
   locationId: string;
   capacity: number;
+  description?: string;
 }
 
 export interface Bed {
@@ -23,6 +25,7 @@ export interface Bed {
   bedNumber: string;
   roomId: string;
   status: 'available' | 'occupied' | 'reserved';
+  description?: string;
 }
 
 export interface Booking {

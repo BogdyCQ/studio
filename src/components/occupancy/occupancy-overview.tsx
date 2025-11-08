@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Bed, Room } from '@/lib/types';
@@ -19,19 +20,19 @@ const statusConfig: Record<
     label: 'available',
     dotClass: 'bg-green-500',
     badgeClass:
-      'bg-green-100 text-green-800 border-green-300 hover:bg-green-200 dark:bg-green-900/50 dark:text-green-200 dark:border-green-700',
+      'border-transparent bg-green-500/20 text-green-700 hover:bg-green-500/30 dark:text-green-300',
   },
   occupied: {
     label: 'occupied',
     dotClass: 'bg-red-500',
     badgeClass:
-      'bg-red-100 text-red-800 border-red-300 hover:bg-red-200 dark:bg-red-900/50 dark:text-red-200 dark:border-red-700',
+      'border-transparent bg-red-500/20 text-red-700 hover:bg-red-500/30 dark:text-red-300',
   },
   reserved: {
     label: 'reserved',
     dotClass: 'bg-yellow-400',
     badgeClass:
-      'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-200 dark:border-yellow-700',
+      'border-transparent bg-yellow-500/20 text-yellow-700 hover:bg-yellow-500/30 dark:text-yellow-300',
   },
 };
 
@@ -43,10 +44,13 @@ export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
       {rooms.length > 0 ? (
         rooms.map((room) => (
           <div key={room.id}>
-            <h4 className="font-headline text-lg mb-3 flex items-center gap-2">
-              <DoorOpen className="h-5 w-5 text-muted-foreground" />
-              {room.name}
-            </h4>
+            <div className='mb-3'>
+              <h4 className="font-headline text-lg flex items-center gap-2">
+                <DoorOpen className="h-5 w-5 text-muted-foreground" />
+                {room.name}
+              </h4>
+              {room.description && <p className="text-sm text-muted-foreground mt-1 ml-7">{room.description}</p>}
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
               {beds
                 .filter((bed) => bed.roomId === room.id)
@@ -57,20 +61,23 @@ export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
                   return (
                     <div
                       key={bed.id}
-                      className="p-3 rounded-lg border bg-card shadow-sm"
+                      className="p-3 rounded-lg border bg-card shadow-sm flex flex-col justify-between"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="font-medium flex items-center gap-2 text-sm">
-                          <BedDouble className="h-4 w-4 text-muted-foreground" />
-                          {bed.bedNumber}
-                        </p>
-                        <div
-                          className={cn('h-2.5 w-2.5 rounded-full', config.dotClass)}
-                        ></div>
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-medium flex items-center gap-2 text-sm">
+                            <BedDouble className="h-4 w-4 text-muted-foreground" />
+                            {bed.bedNumber}
+                          </p>
+                          <div
+                            className={cn('h-2.5 w-2.5 rounded-full', config.dotClass)}
+                          ></div>
+                        </div>
+                        {bed.description && <p className="text-xs text-muted-foreground mb-2">{bed.description}</p>}
                       </div>
                       <Badge
                         variant="outline"
-                        className={cn('capitalize', config.badgeClass)}
+                        className={cn('capitalize w-full justify-center', config.badgeClass)}
                       >
                         {t(config.label)}
                       </Badge>
