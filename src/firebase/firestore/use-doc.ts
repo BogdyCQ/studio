@@ -13,6 +13,8 @@ import {
 import { useFirestore } from '@/firebase/provider';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { useMemoFirebase } from '@/firebase/provider';
+
 
 // Type Definitions
 type DocumentWithId<T> = T & { id: string };
