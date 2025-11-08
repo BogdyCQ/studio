@@ -29,15 +29,10 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const [bedsLoading, setBedsLoading] = useState(true);
 
     useEffect(() => {
-        if (roomsLoading) return; // Wait until rooms are loaded
-
         const fetchBeds = async () => {
+            if (!firestore || !params.locationId) return;
+
             setBedsLoading(true);
-            if (!rooms || rooms.length === 0) {
-                setBeds([]);
-                setBedsLoading(false);
-                return;
-            }
             
             const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', params.locationId));
             
@@ -47,13 +42,12 @@ export default function LocationPage({ params }: { params: { locationId: string 
                 setBeds(allBeds);
             } catch (error) {
                 console.error("Error fetching beds:", error);
-            } finally {
-                setBedsLoading(false);
             }
+            setBedsLoading(false);
         };
 
         fetchBeds();
-    }, [rooms, roomsLoading, firestore, params.locationId]);
+    }, [firestore, params.locationId]);
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
 
