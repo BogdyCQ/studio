@@ -13,24 +13,38 @@ import { doc, collection, query, where, collectionGroup } from "firebase/firesto
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
+import { use } from 'react';
 
 export default function LocationPage({ params }: { params: { locationId: string } }) {
     const { locationId } = params;
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    const locationRef = useMemoFirebase(() => doc(firestore, 'locations', locationId), [firestore, locationId]);
+    const locationRef = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'locations', locationId);
+    }, [firestore, locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
-    const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${locationId}/rooms`)), [firestore, locationId]);
+    const roomsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, `locations/${locationId}/rooms`));
+    }, [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
-    const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId)), [firestore, locationId]);
+    const bedsQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
+    }, [firestore, locationId]);
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
+    
+    if (!location && !locationLoading) {
+        notFound();
+    }
 
-    if (isLoading) {
+    if (isLoading || !location) {
         return (
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
@@ -75,10 +89,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
                 </div>
             </div>
         );
-    }
-
-    if (!location) {
-        notFound();
     }
 
     return (
