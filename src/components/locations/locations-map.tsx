@@ -2,45 +2,27 @@
 "use client";
 
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import type { Location, Bed, Room } from '@/lib/types';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useRouter } from 'next/navigation';
-import { useTranslation } from '@/hooks/use-translation';
 import { useMemo } from 'react';
-
+import { useData } from '../providers/data-provider';
 
 export function LocationsMap() {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    const firestore = useFirestore();
     const router = useRouter();
-    const { t } = useTranslation();
-
-    const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
-    const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
-
-    const roomsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'rooms')), [firestore]);
-    const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
-
-    const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
-    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+    const { locations, beds, rooms, isLoading } = useData();
 
     const locationsWithOccupancy = useMemo(() => {
         if (!locations || !beds || !rooms) return [];
         
         return locations.map(location => {
-          const roomsForLocation = rooms.filter(room => room.locationId === location.id).map(r => r.id);
-          const bedsForLocation = beds.filter(bed => roomsForLocation.includes(bed.roomId));
+          const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
           const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
           const totalBeds = bedsForLocation.length;
           const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
           return { ...location, occupancy };
         });
     }, [locations, rooms, beds]);
-
-    const loading = locationsLoading || bedsLoading || roomsLoading;
-
 
     if (!apiKey) {
         return (
@@ -50,8 +32,7 @@ export function LocationsMap() {
         );
     }
     
-    // Show skeleton while initial loading is happening.
-    if (loading && (!locations || locations.length === 0)) {
+    if (isLoading && (!locations || locations.length === 0)) {
         return (
             <div className="h-full w-full">
                 <Skeleton className="h-full w-full" />

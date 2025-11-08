@@ -7,6 +7,7 @@ import { DashboardSidebar } from '@/components/layout/sidebar';
 import { DashboardHeader } from '@/components/layout/header';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Icons } from '@/components/icons';
+import { DataProvider } from '@/components/providers/data-provider';
 
 export default function DashboardLayout({
   children,
@@ -38,18 +39,20 @@ export default function DashboardLayout({
 
   // Once loading is complete and we have a user, render the dashboard.
   return (
-    <SidebarProvider defaultOpen>
-        <div className="flex h-screen w-full">
-          <DashboardSidebar />
-          <div className="flex flex-col flex-1 w-full overflow-hidden">
-            <DashboardHeader />
-            <main className="h-full overflow-y-auto bg-background">
-              <div className="h-full w-full">
-                {children}
-              </div>
-            </main>
+    <DataProvider>
+      <SidebarProvider defaultOpen>
+          <div className="flex h-screen w-full">
+            <DashboardSidebar />
+            <div className="flex flex-col flex-1 w-full overflow-hidden">
+              <DashboardHeader />
+              <main className="h-full overflow-y-auto bg-background">
+                <div className="h-full w-full">
+                  {children}
+                </div>
+              </main>
+            </div>
           </div>
-        </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </DataProvider>
   );
 }

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { use, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
@@ -9,44 +9,30 @@ import { AvailabilityCalendar } from "@/components/occupancy/availability-calend
 import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
-import { useCollection, useFirestore } from "@/firebase";
-import { collection, query, collectionGroup, where } from "firebase/firestore";
-import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useData } from '@/components/providers/data-provider';
 
-export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
-    const { locationId } = use(params);
+export default function LocationPage({ params }: { params: { locationId: string } }) {
+    const { locationId } = params;
     const { t } = useTranslation();
-    const firestore = useFirestore();
+    const { locations, rooms, beds, isLoading } = useData();
 
-    const locationsQuery = useMemo(() => {
-        if (!firestore || !locationId) return null;
-        return query(collection(firestore, 'locations'), where('id', '==', locationId));
-    }, [firestore, locationId]);
+    const location = useMemo(() => {
+        if (!locations) return null;
+        return locations.find(l => l.id === locationId) || null;
+    }, [locations, locationId]);
 
-    const { data: locationsData, loading: locationsLoading } = useCollection<Location>(locationsQuery);
+    const roomsForLocation = useMemo(() => {
+        if (!rooms || !location) return [];
+        return rooms.filter(r => r.locationId === location.id);
+    }, [rooms, location]);
+
+    const bedsForLocation = useMemo(() => {
+        if (!beds || !location) return [];
+        return beds.filter(b => b.locationId === location.id);
+    }, [beds, location]);
     
-    const location = useMemo(() => (locationsData && locationsData.length > 0 ? locationsData[0] : null), [locationsData]);
-
-    const roomsQuery = useMemo(() => {
-        if (!firestore || !locationId) return null;
-        return query(collectionGroup(firestore, 'rooms'), where('locationId', '==', locationId));
-    }, [firestore, locationId]);
-    const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
-
-    const bedsQuery = useMemo(() => {
-        if (!firestore || !locationId) return null;
-        return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
-    }, [firestore, locationId]);
-    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
-
-    const isLoading = locationsLoading || roomsLoading || bedsLoading;
-    
-    if (!isLoading && !location) {
-        notFound();
-    }
-
     if (isLoading) {
         return (
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -95,7 +81,7 @@ export default function LocationPage({ params }: { params: Promise<{ locationId:
     }
     
     if (!location) {
-        return null; 
+        notFound();
     }
 
     return (
@@ -121,7 +107,7 @@ export default function LocationPage({ params }: { params: Promise<{ locationId:
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <OccupancyOverview rooms={rooms || []} beds={beds || []} />
+                                <OccupancyOverview rooms={roomsForLocation} beds={bedsForLocation} />
                             </CardContent>
                         </Card>
                     </div>

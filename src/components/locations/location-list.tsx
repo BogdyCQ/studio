@@ -6,33 +6,21 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, ChevronRight } from 'lucide-react';
-import type { Location, Bed, Room } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useMemo } from 'react';
+import { useData } from '../providers/data-provider';
 
 export function LocationList() {
   const { t } = useTranslation();
-  const firestore = useFirestore();
-
-  const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
-  const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
-
-  const roomsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'rooms')), [firestore]);
-  const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
-
-  const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
-  const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+  const { locations, rooms, beds, isLoading } = useData();
 
   const locationsWithOccupancy = useMemo(() => {
     if (!locations || !beds || !rooms) return [];
     
     return locations.map(location => {
-      const roomsForLocation = rooms.filter(room => room.locationId === location.id).map(r => r.id);
-      const bedsForLocation = beds.filter(bed => roomsForLocation.includes(bed.roomId));
+      const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
       const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
       const totalBeds = bedsForLocation.length;
       const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
@@ -41,9 +29,7 @@ export function LocationList() {
   }, [locations, rooms, beds]);
 
 
-  const loading = locationsLoading || bedsLoading || roomsLoading;
-
-  if (loading && (!locationsWithOccupancy || locationsWithOccupancy.length === 0)) {
+  if (isLoading && (!locationsWithOccupancy || locationsWithOccupancy.length === 0)) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-headline mb-6"><Skeleton className="h-8 w-48" /></h1>
