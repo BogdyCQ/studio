@@ -3,9 +3,13 @@
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import type { Location } from '@/lib/types';
 import { MapPin } from 'lucide-react';
+import getConfig from 'next/config';
 
 export function LocationMap({ location }: { location: Location }) {
-    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    const { publicRuntimeConfig } = getConfig();
+    const apiKey = publicRuntimeConfig.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+    if (!apiKey) {
         return (
             <div className="flex h-full w-full items-center justify-center bg-muted rounded-lg">
                 <p className="text-muted-foreground">Google Maps API Key is missing.</p>
@@ -15,7 +19,7 @@ export function LocationMap({ location }: { location: Location }) {
 
     return (
         <div className="h-full w-full rounded-lg overflow-hidden">
-            <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}>
+            <APIProvider apiKey={apiKey}>
                 <Map
                     defaultCenter={{ lat: 52.1326, lng: 5.2913 }} // Center of Netherlands
                     defaultZoom={7}
