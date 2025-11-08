@@ -9,7 +9,6 @@ import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Icons } from "@/components/icons";
-import { LoginHandler } from "@/components/login-handler";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -34,21 +33,18 @@ export default function LoginPage() {
     }
   };
 
-  if (loading || user) {
-    return null; // Or a loading spinner
-  }
-  
-  if (isAuthLoading) {
+  if (loading || user || isAuthLoading) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-            <p>Loading...</p>
+             <div className="flex flex-col items-center gap-4">
+              <Icons.logo className="h-16 w-16 animate-pulse text-primary/50" />
+            </div>
         </div>
     )
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <LoginHandler />
       <Card className="w-full max-w-sm shadow-2xl">
         <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
