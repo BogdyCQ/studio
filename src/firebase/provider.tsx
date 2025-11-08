@@ -83,7 +83,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     getRedirectResult(auth).catch((error) => {
       // This catches errors from the redirect attempt itself (e.g., network error)
       console.error("FirebaseProvider: getRedirectResult error:", error);
-      setUserAuthState(prev => ({ ...prev, userError: error }));
+      // It's important to check the error code to avoid overwriting a valid user session with a recoverable error.
+      // For instance, if the user closes the popup, it might throw an error.
+      if (error.code !== 'auth/cancelled-popup-request') {
+        setUserAuthState(prev => ({ ...prev, userError: error, isUserLoading: false }));
+      }
     });
     
     return () => unsubscribe();
