@@ -162,7 +162,7 @@ export function AvailabilityCalendar({ locationId, beds, rooms }: AvailabilityCa
           defaultMonth={range?.from}
           selected={range}
           onSelect={setRange}
-          className="rounded-md border p-0"
+          className="rounded-md border w-full"
           disabled={{ before: today }}
           modifiers={{ ...occupancyByDay }}
           modifiersClassNames={{
