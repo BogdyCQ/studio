@@ -12,7 +12,6 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useEffect, useMemo } from 'react';
-import { seedDatabase } from '@/lib/seed';
 
 export function LocationList() {
   const { t } = useTranslation();
@@ -24,13 +23,6 @@ export function LocationList() {
   const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
   const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
   
-  useEffect(() => {
-    if (!locationsLoading && locations && locations.length === 0) {
-        console.log('No locations found. Seeding database with new data...');
-        seedDatabase(firestore);
-    }
-  }, [locations, locationsLoading, firestore]);
-
   const locationsWithOccupancy = useMemo(() => {
     if (!locations || !beds) return [];
     
