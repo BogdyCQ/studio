@@ -10,13 +10,14 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {getFirestore, collectionGroup, query, where, getDocs} from 'firebase/firestore';
-import {initializeFirebase} from '@/firebase';
+import {getFirestore} from 'firebase-admin/firestore';
+import { initializeServerFirebase } from '@/firebase/server';
 import type {Bed} from '@/lib/types';
 import {parseISO, areIntervalsOverlapping} from 'date-fns';
 
-// Initialize Firestore through the existing mechanism
-const {firestore} = initializeFirebase();
+// Initialize Firestore for the server
+initializeServerFirebase();
+const firestore = getFirestore();
 
 const BedSchema = z.object({
   id: z.string(),
@@ -46,11 +47,11 @@ const getBedsForLocation = ai.defineTool(
   },
   async ({locationId}) => {
     console.log(`Tool: Fetching beds for locationId: ${locationId}`);
-    const bedsQuery = query(
-      collectionGroup(firestore, 'beds'),
-      where('locationId', '==', locationId)
-    );
-    const querySnapshot = await getDocs(bedsQuery);
+    const bedsQuery = firestore
+      .collectionGroup('beds')
+      .where('locationId', '==', locationId);
+    
+    const querySnapshot = await bedsQuery.get();
     const beds = querySnapshot.docs.map(doc => doc.data() as Bed);
     console.log(`Tool: Found ${beds.length} beds.`);
     return beds;
