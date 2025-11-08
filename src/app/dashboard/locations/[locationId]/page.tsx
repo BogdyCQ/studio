@@ -15,8 +15,8 @@ import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { use, useEffect, useState } from "react";
 
-export default function LocationPage({ params }: { params: { locationId: string } }) {
-    const { locationId } = params;
+export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
+    const { locationId } = use(params);
     const { t } = useTranslation();
     const firestore = useFirestore();
 
