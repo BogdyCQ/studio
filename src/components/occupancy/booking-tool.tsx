@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -105,6 +106,7 @@ export function BookingTool({ locationId }: BookingToolProps) {
       userId: user.uid,
       startDate: format(form.getValues("startDate"), 'yyyy-MM-dd'),
       endDate: format(form.getValues("endDate"), 'yyyy-MM-dd'),
+      locationId: locationId,
     };
 
     const bookingsCol = collection(firestore, `users/${user.uid}/bookings`);

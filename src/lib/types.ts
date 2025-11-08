@@ -34,4 +34,5 @@ export interface Booking {
   userId: string;
   startDate: string;
   endDate: string;
+  locationId: string;
 }

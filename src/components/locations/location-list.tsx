@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, ChevronRight } from 'lucide-react';
-import type { Location, Bed } from '@/lib/types';
+import type { Location, Bed, Room } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -21,23 +21,29 @@ export function LocationList() {
   const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
   const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
 
+  const roomsQuery = useMemoFirebase(() => query(collection(firestore, 'rooms')), [firestore]);
+  const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
+
   const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
   const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
   
   const locationsWithOccupancy = useMemo(() => {
-    if (!locations || !beds) return [];
+    if (!locations || !beds || !rooms) return [];
     
     return locations.map(location => {
-      const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
+      const roomsInLocation = rooms.filter(room => room.locationId === location.id);
+      const roomIdsInLocation = roomsInLocation.map(room => room.id);
+      const bedsForLocation = beds.filter(bed => roomIdsInLocation.includes(bed.roomId));
+      
       const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
       const totalBeds = bedsForLocation.length;
       const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
       return { ...location, occupancy };
     });
-  }, [locations, beds]);
+  }, [locations, rooms, beds]);
 
 
-  const loading = locationsLoading || bedsLoading;
+  const loading = locationsLoading || bedsLoading || roomsLoading;
 
   if (loading && (!locations || locations.length === 0)) {
     return (
@@ -109,4 +115,3 @@ export function LocationList() {
     </div>
   );
 }
-

@@ -2,7 +2,7 @@
 "use client";
 
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import type { Location, Bed } from '@/lib/types';
+import type { Location, Bed, Room } from '@/lib/types';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
@@ -20,22 +20,28 @@ export function LocationsMap() {
     const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
     const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
 
+    const roomsQuery = useMemoFirebase(() => query(collection(firestore, 'rooms')), [firestore]);
+    const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
+
     const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
     const locationsWithOccupancy = useMemo(() => {
-        if (!locations || !beds) return [];
+        if (!locations || !beds || !rooms) return [];
         
         return locations.map(location => {
-          const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
+          const roomsInLocation = rooms.filter(room => room.locationId === location.id);
+          const roomIdsInLocation = roomsInLocation.map(room => room.id);
+          const bedsForLocation = beds.filter(bed => roomIdsInLocation.includes(bed.roomId));
+
           const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
           const totalBeds = bedsForLocation.length;
           const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
           return { ...location, occupancy };
         });
-    }, [locations, beds]);
+    }, [locations, rooms, beds]);
 
-    const loading = locationsLoading || bedsLoading;
+    const loading = locationsLoading || bedsLoading || roomsLoading;
 
 
     if (!apiKey) {
@@ -87,4 +93,3 @@ export function LocationsMap() {
         </div>
     );
 }
-
