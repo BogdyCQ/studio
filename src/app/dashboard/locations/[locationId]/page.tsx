@@ -13,8 +13,10 @@ import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useData } from '@/components/providers/data-provider';
 
-export default function LocationPage({ params }: { params: { locationId: string } }) {
-    const { locationId } = params;
+import { use } from 'react';
+
+export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
+    const { locationId } = use(params);
     const { t } = useTranslation();
     const { locations, rooms, beds, isLoading } = useData();
 
