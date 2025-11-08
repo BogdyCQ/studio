@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from '@/hooks/use-auth';
+import { useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { DashboardSidebar } from '@/components/layout/sidebar';
@@ -13,19 +13,19 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
 
   useEffect(() => {
     // Only redirect if loading is finished and there's no user.
-    if (!loading && !user) {
+    if (!isUserLoading && !user) {
       router.replace('/login');
     }
-  }, [user, loading, router]);
+  }, [user, isUserLoading, router]);
 
   // While loading, or if there's no user yet (and we're about to redirect),
   // show a loading state to prevent content flash.
-  if (loading || !user) {
+  if (isUserLoading || !user) {
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
