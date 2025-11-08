@@ -17,19 +17,20 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
-    // Only redirect if loading is finished and there's no user.
+    // Only redirect if loading is finished and there is still no user.
     if (!isUserLoading && !user) {
       router.replace('/login');
     }
   }, [user, isUserLoading, router]);
 
-  // While loading, or if there's no user yet (and we're about to redirect),
-  // show a loading state to prevent content flash.
+  // While loading, or if there's no user and we are about to redirect,
+  // show a full-screen loading state to prevent a flash of un-authenticated content.
   if (isUserLoading || !user) {
     return (
        <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Icons.logo className="h-16 w-16 animate-pulse text-primary/50" />
+          <p className="text-muted-foreground">Authenticating...</p>
         </div>
       </div>
     );
