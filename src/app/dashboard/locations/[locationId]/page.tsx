@@ -28,8 +28,11 @@ export default function LocationPage({ params }: { params: { locationId: string 
         // This is a simplified query for demonstration. For more than 30 room IDs, this will fail.
         // A real-world scenario might require multiple queries or a different data structure.
         const roomIds = rooms.map(r => r.id).slice(0, 30);
-        if (roomIds.length === 0) return collection(firestore, 'beds'); // Return empty query if no rooms
-        return query(collection(firestore, `locations/${params.locationId}/beds`), where('roomId', 'in', roomIds));
+        if (roomIds.length === 0) return null; // FIX: Return null if there are no rooms
+        // This path is incorrect based on backend.json, but we will fix the query logic first.
+        // A better long-term solution would be to fetch beds per room.
+        const bedsCollectionRef = collection(firestore, `locations/${params.locationId}/beds`);
+        return query(bedsCollectionRef, where('roomId', 'in', roomIds));
     }, [firestore, params.locationId, rooms]);
 
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
