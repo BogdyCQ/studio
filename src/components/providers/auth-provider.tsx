@@ -1,8 +1,7 @@
 "use client";
 
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, ReactNode } from 'react';
 import { User } from 'firebase/auth';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Icons } from '@/components/icons';
 import { FirebaseClientProvider, useUser } from '@/firebase';
 
