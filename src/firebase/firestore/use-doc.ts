@@ -60,11 +60,7 @@ export const useDoc = <T,>(docRef: DocumentReference<DocumentData> | null | unde
       setData(null); // Explicitly set data to null when there's no reference
       return;
     }
-    if (!isMemo(docRef)) {
-      console.warn(
-        `[use-doc] Unstable document reference passed to useDoc hook. Use useMemoFirebase to prevent unnecessary re-renders.`
-      );
-    }
+
     setLoading(true);
     setError(null);
 

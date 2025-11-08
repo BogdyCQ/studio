@@ -77,12 +77,6 @@ export const useCollection = <T,>(
       return;
     }
 
-    if (!isMemo(queryOrRef)) {
-      console.warn(
-        `[use-collection] Unstable query/reference passed to useCollection hook. Use useMemoFirebase to prevent unnecessary re-renders.`
-      );
-    }
-
     setLoading(true);
     setError(null);
 
