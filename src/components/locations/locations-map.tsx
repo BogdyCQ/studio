@@ -2,13 +2,13 @@
 "use client";
 
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
-import type { Location } from '@/lib/types';
-import { MapPin } from 'lucide-react';
+import type { Location, Bed } from '@/lib/types';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/use-translation';
+import { useMemo } from 'react';
 
 
 export function LocationsMap() {
@@ -18,7 +18,25 @@ export function LocationsMap() {
     const { t } = useTranslation();
 
     const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
-    const { data: locations, loading } = useCollection<Location>(locationsQuery);
+    const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
+
+    const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
+    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+
+    const locationsWithOccupancy = useMemo(() => {
+        if (!locations || !beds) return [];
+        
+        return locations.map(location => {
+          const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
+          const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
+          const totalBeds = bedsForLocation.length;
+          const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+          return { ...location, occupancy };
+        });
+    }, [locations, beds]);
+
+    const loading = locationsLoading || bedsLoading;
+
 
     if (!apiKey) {
         return (
@@ -29,7 +47,6 @@ export function LocationsMap() {
     }
     
     // Show skeleton while initial loading is happening.
-    // If locations exist, we can render the map immediately, it will populate as data streams in.
     if (loading && (!locations || locations.length === 0)) {
         return (
             <div className="h-full w-full">
@@ -49,14 +66,19 @@ export function LocationsMap() {
                     disableDefaultUI={true}
                     className="h-full w-full"
                 >
-                    {(locations || []).map((location) => {
+                    {(locationsWithOccupancy).map((location) => {
                         return (
                             <AdvancedMarker 
                                 key={location.id} 
                                 position={location.position}
                                 onClick={() => router.push(`/dashboard/locations/${location.id}`)}
                             >
-                               <MapPin className="h-10 w-10 text-primary drop-shadow-lg cursor-pointer" fill="white" />
+                               <div className="relative cursor-pointer">
+                                    <div className="w-12 h-12 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg">
+                                        {location.occupancy}%
+                                    </div>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-[-8px] w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-[12px] border-t-primary"></div>
+                                </div>
                             </AdvancedMarker>
                         )
                     })}
