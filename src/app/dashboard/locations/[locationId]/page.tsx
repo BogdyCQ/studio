@@ -1,7 +1,6 @@
 
 'use client';
 
-import { use } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
@@ -15,8 +14,8 @@ import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
-    const { locationId } = use(params);
+export default function LocationPage({ params }: { params: { locationId: string } }) {
+    const { locationId } = params;
     const { t } = useTranslation();
     const firestore = useFirestore();
 
