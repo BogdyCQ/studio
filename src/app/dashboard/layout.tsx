@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { DashboardSidebar } from '@/components/layout/sidebar';
 import { DashboardHeader } from '@/components/layout/header';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { Icons } from '@/components/icons';
 
 export default function DashboardLayout({
   children,
@@ -16,17 +17,25 @@ export default function DashboardLayout({
   const router = useRouter();
 
   useEffect(() => {
+    // Only redirect if loading is finished and there's no user.
     if (!loading && !user) {
       router.replace('/login');
     }
   }, [user, loading, router]);
 
+  // While loading, or if there's no user yet (and we're about to redirect),
+  // show a loading state to prevent content flash.
   if (loading || !user) {
-    // The AuthProvider shows a loading skeleton, so this can be null while
-    // the initial auth state is determined.
-    return null;
+    return (
+       <div className="flex h-screen w-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Icons.logo className="h-16 w-16 animate-pulse text-primary/50" />
+        </div>
+      </div>
+    );
   }
 
+  // Once loading is complete and we have a user, render the dashboard.
   return (
     <SidebarProvider defaultOpen>
         <div className="flex h-screen w-full">

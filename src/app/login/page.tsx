@@ -33,7 +33,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isAuthLoading || (!loading && user)) {
+  if (loading || isAuthLoading || user) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
              <div className="flex flex-col items-center gap-4">
