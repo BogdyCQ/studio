@@ -1,6 +1,7 @@
 
 'use client';
 
+import { use } from "react";
 import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
@@ -13,17 +14,16 @@ import { doc, collection, query, where } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
-import React, { useEffect, useState } from "react";
 
-export default function LocationPage({ params }: { params: { locationId: string } }) {
-    const { locationId } = params;
+export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
+    const { locationId } = use(params);
     const { t } = useTranslation();
     const firestore = useFirestore();
 
     const locationRef = useMemoFirebase(() => doc(firestore, 'locations', locationId), [firestore, locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
-    const roomsQuery = useMemoFirebase(() => query(collection(firestore, 'rooms'), where('locationId', '==', locationId)), [firestore, locationId]);
+    const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${locationId}/rooms`)), [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
     const bedsQuery = useMemoFirebase(() => query(collection(firestore, 'beds'), where('locationId', '==', locationId)), [firestore, locationId]);
