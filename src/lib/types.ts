@@ -14,6 +14,7 @@ export interface Room {
   id: string;
   name: string;
   locationId: string;
+  capacity: number;
 }
 
 export interface Bed {

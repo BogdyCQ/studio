@@ -1,6 +1,6 @@
 "use client";
 
-import { Bed, Room } from "@/lib/types";
+import type { Bed, Room } from "@/lib/types";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { BedDouble, DoorOpen } from "lucide-react";
@@ -43,7 +43,7 @@ export function OccupancyOverview({ rooms, beds }: OccupancyOverviewProps) {
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4">
                         {beds.filter(bed => bed.roomId === room.id).map(bed => {
-                            const config = statusConfig[bed.status];
+                            const config = statusConfig[bed.status] || statusConfig.available;
                             return (
                                 <div key={bed.id} className="p-3 rounded-lg border bg-card shadow-sm">
                                     <div className="flex items-center justify-between mb-2">

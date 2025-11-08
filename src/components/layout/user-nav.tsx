@@ -14,15 +14,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth as useAppAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/hooks/use-translation";
-import { auth } from "@/lib/firebase";
+import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
 export function UserNav() {
-  const { user } = useAuth();
+  const { user } = useAppAuth();
   const { t } = useTranslation();
+  const auth = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {

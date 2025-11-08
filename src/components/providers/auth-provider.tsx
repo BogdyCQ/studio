@@ -1,10 +1,10 @@
 "use client";
 
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { User } from 'firebase/auth';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Icons } from '@/components/icons';
+import { FirebaseClientProvider, useUser } from '@/firebase';
 
 type AuthContextType = {
   user: User | null;
@@ -13,20 +13,10 @@ type AuthContextType = {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const AuthProviderContent = ({ children }: { children: ReactNode }) => {
+  const { user, isUserLoading } = useUser();
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  if (loading) {
+  if (isUserLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -37,8 +27,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ user, loading: isUserLoading }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  return (
+    <FirebaseClientProvider>
+      <AuthProviderContent>
+        {children}
+      </AuthProviderContent>
+    </FirebaseClientProvider>
+  )
 };

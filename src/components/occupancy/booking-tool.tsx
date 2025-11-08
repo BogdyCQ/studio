@@ -21,10 +21,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "@/hooks/use-translation";
 import { cn } from "@/lib/utils";
 import { suggestBestBed, SuggestBestBedOutput } from "@/ai/flows/suggest-best-bed";
+import { useFirestore, useUser, addDocumentNonBlocking } from "@/firebase";
+import { collection } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 type BookingToolProps = {
   locationId: string;
@@ -35,6 +48,12 @@ export function BookingTool({ locationId }: BookingToolProps) {
   const [suggestion, setSuggestion] = useState<SuggestBestBedOutput | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const { toast } = useToast();
+
 
   const FormSchema = z.object({
     startDate: z.date({
@@ -65,13 +84,40 @@ export function BookingTool({ locationId }: BookingToolProps) {
     
     try {
         const result = await suggestBestBed(input);
-        setSuggestion(result);
+        if (result.bedId && result.bedId !== 'null') {
+            setSuggestion(result);
+        } else {
+            setError(result.reason || "No bed available.");
+        }
     } catch (e) {
         setError("An error occurred while fetching suggestion.");
         console.error(e);
     } finally {
         setIsLoading(false);
     }
+  }
+
+  const handleBookNow = async () => {
+    if (!suggestion || !suggestion.bedId || !user || !form.getValues("startDate") || !form.getValues("endDate")) return;
+
+    const bookingData = {
+      bedId: suggestion.bedId,
+      userId: user.uid,
+      startDate: format(form.getValues("startDate"), 'yyyy-MM-dd'),
+      endDate: format(form.getValues("endDate"), 'yyyy-MM-dd'),
+    };
+
+    const bookingsCol = collection(firestore, `users/${user.uid}/bookings`);
+    addDocumentNonBlocking(bookingsCol, bookingData);
+    
+    toast({
+      title: "Booking Confirmed!",
+      description: `Bed ${suggestion.bedId} has been booked.`,
+    });
+    
+    setShowConfirmation(false);
+    setSuggestion(null);
+    form.reset();
   }
 
   return (
@@ -162,28 +208,44 @@ export function BookingTool({ locationId }: BookingToolProps) {
           </Button>
         </form>
       </Form>
-      {(suggestion || error) && (
-        <Card className={cn(error ? 'bg-destructive/20 border-destructive' : 'bg-accent/50')}>
+      
+      {suggestion && (
+        <Card className={'bg-accent/50'}>
           <CardContent className="p-4 space-y-2">
             <h4 className="font-medium">{t('suggestion')}</h4>
-            {suggestion && (
-                <>
-                {suggestion.bedId && suggestion.bedId !== 'null' ? (
-                    <div>
-                        <p><span className="font-semibold">{t('suggestedBed')}:</span> {suggestion.bedId}</p>
-                        <p className="text-sm text-muted-foreground mt-1"><span className="font-semibold">{t('reason')}:</span> {suggestion.reason}</p>
-                    </div>
-                ) : (
-                    <p className="text-muted-foreground">{t('noBedAvailable')}: {suggestion.reason}</p>
-                )}
-                </>
-            )}
-            {error && (
-              <p className="text-sm text-destructive-foreground">{error}</p>
-            )}
+            <div>
+                <p><span className="font-semibold">{t('suggestedBed')}:</span> {suggestion.bedId}</p>
+                <p className="text-sm text-muted-foreground mt-1"><span className="font-semibold">{t('reason')}:</span> {suggestion.reason}</p>
+            </div>
+            <Button className="w-full" onClick={() => setShowConfirmation(true)}>{t('bookNow')}</Button>
           </CardContent>
         </Card>
       )}
+
+      {error && (
+        <Card className='bg-destructive/20 border-destructive'>
+            <CardContent className="p-4 space-y-2">
+                <h4 className="font-medium">{t('noBedAvailable')}</h4>
+                <p className="text-sm text-destructive-foreground">{error}</p>
+            </CardContent>
+        </Card>
+      )}
+
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Booking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to book bed {suggestion?.bedId} from {form.getValues("startDate") ? format(form.getValues("startDate"), "PPP") : ''} to {form.getValues("endDate") ? format(form.getValues("endDate"), "PPP") : ''}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBookNow}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }

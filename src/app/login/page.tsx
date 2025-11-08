@@ -2,9 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth as useAppAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/hooks/use-translation";
-import { auth } from "@/lib/firebase";
+import { useAuth } from "@/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -12,7 +12,8 @@ import { Icons } from "@/components/icons";
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { user, loading } = useAuth();
+  const { user, loading } = useAppAuth();
+  const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {

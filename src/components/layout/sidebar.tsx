@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin } from 'lucide-react';
+import { MapPin, CalendarCheck } from 'lucide-react';
 
 import { useTranslation } from '@/hooks/use-translation';
 import { Icons } from '@/components/icons';
@@ -22,6 +22,7 @@ export function DashboardSidebar() {
 
   const menuItems = [
     { href: '/dashboard', label: t('locations'), icon: MapPin },
+    { href: '/dashboard/bookings', label: t('myBookings'), icon: CalendarCheck },
   ];
 
   return (

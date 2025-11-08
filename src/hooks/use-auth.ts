@@ -2,6 +2,7 @@
 
 import { useContext } from 'react';
 import { AuthContext } from '@/components/providers/auth-provider';
+import { useUser } from '@/firebase';
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
