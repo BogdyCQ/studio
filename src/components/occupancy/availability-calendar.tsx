@@ -155,7 +155,7 @@ export function AvailabilityCalendar({ locationId, beds, rooms }: AvailabilityCa
 
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
       <div className="flex justify-center">
         <Calendar
           mode="range"

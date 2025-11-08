@@ -48,8 +48,8 @@ export default function LocationPage({ params }: { params: { locationId: string 
                             <CardHeader>
                                 <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            <CardContent className="p-0">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
                                     <Skeleton className="h-[350px] w-full" />
                                     <Skeleton className="h-[350px] w-full" />
                                 </div>
@@ -86,7 +86,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
                                 <CalendarDays /> {t('availabilityAndBooking')}
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="p-0">
                             <AvailabilityCalendar locationId={location.id} beds={bedsForLocation} rooms={roomsForLocation} />
                         </CardContent>
                     </Card>
