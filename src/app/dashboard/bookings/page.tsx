@@ -25,49 +25,51 @@ export default function BookingsPage() {
     const isLoading = isUserLoading || bookingsLoading;
 
     return (
-        <div className="space-y-8">
-            <h1 className="text-3xl font-headline">{t('yourBookings')}</h1>
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>{t('bookingId')}</TableHead>
-                                <TableHead>{t('bedId')}</TableHead>
-                                <TableHead>{t('startDate')}</TableHead>
-                                <TableHead>{t('endDate')}</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                [...Array(5)].map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                                    </TableRow>
-                                ))
-                            ) : bookings && bookings.length > 0 ? (
-                                bookings.map((booking) => (
-                                    <TableRow key={booking.id}>
-                                        <TableCell><Badge variant="outline">{booking.id}</Badge></TableCell>
-                                        <TableCell>{booking.bedId}</TableCell>
-                                        <TableCell>{format(new Date(booking.startDate), "PPP")}</TableCell>
-                                        <TableCell>{format(new Date(booking.endDate), "PPP")}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="space-y-8">
+                <h1 className="text-3xl font-headline">{t('yourBookings')}</h1>
+                <Card>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center h-24">
-                                        {t('noBookings')}
-                                    </TableCell>
+                                    <TableHead>{t('bookingId')}</TableHead>
+                                    <TableHead>{t('bedId')}</TableHead>
+                                    <TableHead>{t('startDate')}</TableHead>
+                                    <TableHead>{t('endDate')}</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+                            </TableHeader>
+                            <TableBody>
+                                {isLoading ? (
+                                    [...Array(5)].map((_, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                            <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : bookings && bookings.length > 0 ? (
+                                    bookings.map((booking) => (
+                                        <TableRow key={booking.id}>
+                                            <TableCell><Badge variant="outline">{booking.id}</Badge></TableCell>
+                                            <TableCell>{booking.bedId}</TableCell>
+                                            <TableCell>{format(new Date(booking.startDate), "PPP")}</TableCell>
+                                            <TableCell>{format(new Date(booking.endDate), "PPP")}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center h-24">
+                                            {t('noBookings')}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

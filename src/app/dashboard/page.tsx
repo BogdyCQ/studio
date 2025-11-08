@@ -2,7 +2,7 @@ import { LocationsMap } from "@/components/locations/locations-map";
 
 export default function DashboardPage() {
     return (
-        <div className="space-y-8 h-full">
+        <div className="h-full w-full">
             <LocationsMap />
         </div>
     );

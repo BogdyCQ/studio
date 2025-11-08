@@ -28,11 +28,11 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const [bedsLoading, setBedsLoading] = useState(true);
 
     useEffect(() => {
-        if (!rooms) return;
+        if (roomsLoading) return; // Wait until rooms are loaded
 
         const fetchBeds = async () => {
             setBedsLoading(true);
-            if (rooms.length === 0) {
+            if (!rooms || rooms.length === 0) {
                 setBeds([]);
                 setBedsLoading(false);
                 return;
@@ -55,48 +55,52 @@ export default function LocationPage({ params }: { params: { locationId: string 
         };
 
         fetchBeds();
-    }, [rooms, firestore, params.locationId]);
+    }, [rooms, roomsLoading, firestore, params.locationId]);
 
-    if (locationLoading || roomsLoading || bedsLoading) {
+    const isLoading = locationLoading || roomsLoading || bedsLoading;
+
+    if (isLoading) {
         return (
-            <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
-                <div className="lg:col-span-3 space-y-8">
-                     <Card>
-                        <CardHeader>
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
+                    <div className="lg:col-span-3 space-y-8">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
+                            </CardHeader>
+                            <CardContent className="h-96">
+                                <Skeleton className="h-full w-full" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-2 space-y-8">
+                        <Card>
+                            <CardHeader>
+                            <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
+                            </Header>
+                            <CardContent>
+                                <Skeleton className="h-40 w-full" />
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-1 space-y-8">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Skeleton className="h-64 w-full" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
                             <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                        </CardHeader>
-                        <CardContent className="h-96">
-                            <Skeleton className="h-full w-full" />
-                        </CardContent>
-                    </Card>
-                </div>
-                 <div className="lg:col-span-2 space-y-8">
-                    <Card>
-                        <CardHeader>
-                           <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
-                        </Header>
-                        <CardContent>
-                            <Skeleton className="h-40 w-full" />
-                        </CardContent>
-                    </Card>
-                </div>
-                <div className="lg:col-span-1 space-y-8">
-                    <Card>
-                        <CardHeader>
-                             <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Skeleton className="h-64 w-full" />
-                        </CardContent>
-                    </Card>
-                     <Card>
-                        <CardHeader>
-                           <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                             <Skeleton className="h-64 w-full" />
-                        </CardContent>
-                    </Card>
+                            </Header>
+                            <CardContent>
+                                <Skeleton className="h-64 w-full" />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         );
@@ -107,51 +111,53 @@ export default function LocationPage({ params }: { params: { locationId: string 
     }
 
     return (
-        <div className="grid gap-8 grid-cols-1">
-             <div className="space-y-4">
-                 <h1 className="text-3xl font-headline flex items-center gap-2">
-                    {location.name}
-                 </h1>
-                 <p className="text-muted-foreground">{location.address}</p>
-            </div>
-             <Card className="h-96">
-                <LocationMap location={location} />
-            </Card>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                 <div className="lg:col-span-2 space-y-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                               <BedDouble /> {t('roomsAndBeds')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <OccupancyOverview rooms={rooms || []} beds={beds || []} />
-                        </CardContent>
-                    </Card>
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid gap-8 grid-cols-1">
+                <div className="space-y-4">
+                    <h1 className="text-3xl font-headline flex items-center gap-2">
+                        {location.name}
+                    </h1>
+                    <p className="text-muted-foreground">{location.address}</p>
                 </div>
-                <div className="lg:col-span-1 space-y-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                <CalendarDays /> {t('availability')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <AvailabilityCalendar />
-                        </CardContent>
-                    </Card>
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                <Bot /> {t('bookingTool')}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <BookingTool locationId={location.id} />
-                        </CardContent>
-                    </Card>
+                <Card className="h-96">
+                    <LocationMap location={location} />
+                </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                <BedDouble /> {t('roomsAndBeds')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <OccupancyOverview rooms={rooms || []} beds={beds || []} />
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="lg:col-span-1 space-y-8">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                    <CalendarDays /> {t('availability')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <AvailabilityCalendar />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                    <Bot /> {t('bookingTool')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <BookingTool locationId={location.id} />
+                            </CardContent>
+                        </Card>
+                    </div>
                 </div>
             </div>
         </div>
