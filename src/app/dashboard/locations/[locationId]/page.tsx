@@ -15,14 +15,14 @@ import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { useEffect, useState } from "react";
 
-export default function LocationPage({ params }: { params: { locationId: string } }) {
+export default function LocationPage({ params: { locationId } }: { params: { locationId: string } }) {
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    const locationRef = useMemoFirebase(() => doc(firestore, 'locations', params.locationId), [firestore, params.locationId]);
+    const locationRef = useMemoFirebase(() => doc(firestore, 'locations', locationId), [firestore, locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
-    const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${params.locationId}/rooms`)), [firestore, params.locationId]);
+    const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${locationId}/rooms`)), [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
     const [beds, setBeds] = useState<Bed[]>([]);
@@ -30,10 +30,10 @@ export default function LocationPage({ params }: { params: { locationId: string 
 
     useEffect(() => {
         const fetchBeds = async () => {
-            if (!firestore || !params.locationId) return;
+            if (!firestore || !locationId) return;
 
             setBedsLoading(true);
-            const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', params.locationId));
+            const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
             try {
                 const querySnapshot = await getDocs(bedsCollectionGroup);
                 const allBeds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bed));
@@ -45,7 +45,8 @@ export default function LocationPage({ params }: { params: { locationId: string 
         };
 
         fetchBeds();
-    }, [firestore, params.locationId]);
+    }, [firestore, locationId]);
+
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
 
