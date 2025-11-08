@@ -48,12 +48,12 @@ export function LocationList() {
     <div>
         <h1 className="text-3xl font-headline mb-6">{t('allLocations')}</h1>
         <div className="w-full space-y-4">
-        {(locations || []).map((location, index) => {
+        {(locations || []).map((location) => {
             const placeholder = PlaceHolderImages.find(p => p.id === location.imageId);
             const occupancy = Math.floor(Math.random() * 101);
             return (
-            <Card key={location.id} className="overflow-hidden transition-shadow hover:shadow-lg">
-                <Link href={`/dashboard/locations/${location.id}`} className="block p-4 hover:bg-accent/50 group">
+            <Link key={location.id} href={`/dashboard/locations/${location.id}`} className="block">
+                <Card className="overflow-hidden transition-shadow hover:shadow-lg p-4 hover:bg-accent/50">
                     <div className="flex items-center gap-4 w-full">
                         {placeholder && (
                             <div className="w-24 h-16 sm:w-32 sm:h-20 flex-shrink-0">
@@ -80,10 +80,10 @@ export function LocationList() {
                             </div>
                             <p className="text-xs text-muted-foreground text-right">{t('occupancyRate')}</p>
                         </div>
-                        <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
+                        <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </div>
-                </Link>
-            </Card>
+                </Card>
+            </Link>
             );
         })}
         </div>
