@@ -50,19 +50,29 @@ service cloud.firestore {
     }
 
     /**
+     * @description Controls access to the collection group 'beds'.
+     * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}
+     * @allow (list) - Allows authenticated users to list all beds across all rooms and locations.
+     * @principle This is necessary for the collection group query used to get all beds for a location.
+     */
+    match /{path=**}/beds/{bedId} {
+        allow list: if request.auth != null;
+    }
+
+    /**
      * @description Controls access to the /locations/{locationId}/rooms/{roomId}/beds/{bedId} collection.
      * @path /locations/{locationId}/rooms/{roomId}/beds/{bedId}
      * @allow (create, update, delete) - Only an authenticated user can create a bed within a room.
-     * @allow (get, list) - Only an authenticated user can get and list beds.
+     * @allow (get) - Only an authenticated user can get a specific bed.
      * @deny (create, update, delete) - A non-authenticated user cannot create, update or delete a bed.
-     * @principle Enforces that only authenticated users can create, update, delete and list beds.
+     * @principle Enforces that only authenticated users can manage and view individual beds.
      */
     match /locations/{locationId}/rooms/{roomId}/beds/{bedId} {
       function isSignedIn() {
         return request.auth != null;
       }
 
-      allow get, list: if isSignedIn();
+      allow get: if isSignedIn();
       allow create: if isSignedIn();
       allow update: if isSignedIn();
       allow delete: if isSignedIn();
