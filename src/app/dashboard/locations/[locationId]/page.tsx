@@ -17,6 +17,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const { t } = useTranslation();
     const firestore = useFirestore();
 
+    console.log('Test3')
     const locationRef = useMemoFirebase(() => doc(firestore, 'locations', params.locationId), [firestore, params.locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
