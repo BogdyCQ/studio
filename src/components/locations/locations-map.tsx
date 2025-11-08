@@ -60,10 +60,6 @@ export function LocationsMap() {
                     className="h-full w-full"
                 >
                     {(locations || []).map((location) => {
-                        // Assuming an average of 20 beds per location for this calculation
-                        const totalBeds = 20; 
-                        const availableBeds = Math.round(totalBeds * (1 - location.occupancy / 100));
-
                         return (
                             <AdvancedMarker 
                                 key={location.id} 
@@ -71,9 +67,9 @@ export function LocationsMap() {
                                 onClick={() => router.push(`/dashboard/locations/${location.id}`)}
                             >
                                 <div className="flex flex-col items-center cursor-pointer group">
-                                    <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-full border-2 border-primary-foreground shadow-lg transform group-hover:scale-110 transition-transform duration-200">
+                                    <div className="flex items-center justify-center w-12 h-12 bg-primary rounded-full border-2 border-primary-foreground shadow-lg transform group-hover:scale-110 transition-transform duration-200">
                                         <span className="text-primary-foreground font-bold text-base">
-                                            {availableBeds}
+                                            {location.occupancy}%
                                         </span>
                                     </div>
                                     <div className="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-primary transform group-hover:scale-110 transition-transform duration-200"></div>
@@ -86,5 +82,6 @@ export function LocationsMap() {
         </div>
     );
 }
+
 
 
