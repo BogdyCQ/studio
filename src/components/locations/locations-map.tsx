@@ -4,39 +4,14 @@
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import type { Location } from '@/lib/types';
 import { MapPin } from 'lucide-react';
-import { useCollection, useFirestore, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/use-translation';
 import { useEffect } from 'react';
+import { seedDatabase } from '@/lib/seed';
 
-const sampleLocations: Location[] = [
-    {
-        id: 'amsterdam',
-        name: 'SpaceWise Amsterdam',
-        address: 'Dam 1, 1012 JS Amsterdam',
-        position: { lat: 52.3731, lng: 4.8926 },
-        occupancy: 75,
-        imageId: 'amsterdam',
-    },
-    {
-        id: 'rotterdam',
-        name: 'SpaceWise Rotterdam',
-        address: 'Blaak 1, 3011 GA Rotterdam',
-        position: { lat: 51.9225, lng: 4.4840 },
-        occupancy: 60,
-        imageId: 'rotterdam',
-    },
-    {
-        id: 'utrecht',
-        name: 'SpaceWise Utrecht',
-        address: 'Domplein 21, 3512 JE Utrecht',
-        position: { lat: 52.0907, lng: 5.1214 },
-        occupancy: 85,
-        imageId: 'utrecht',
-    }
-];
 
 export function LocationsMap() {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -50,13 +25,8 @@ export function LocationsMap() {
     useEffect(() => {
         // When loading is finished and there are no locations, seed the database.
         if (!loading && locations && locations.length === 0) {
-            console.log('No locations found. Seeding database...');
-            sampleLocations.forEach(location => {
-                const docRef = doc(firestore, 'locations', location.id);
-                // Use a non-blocking write to prevent UI freezes.
-                // The real-time listener from useCollection will pick up the changes.
-                setDocumentNonBlocking(docRef, location);
-            });
+            console.log('No locations found. Seeding database with new data...');
+            seedDatabase(firestore);
         }
     }, [locations, loading, firestore]);
 
