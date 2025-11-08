@@ -19,8 +19,9 @@ export interface Room {
 
 export interface Bed {
   id: string;
-  name: string;
+  bedNumber: string;
   roomId: string;
+  locationId: string; // Add locationId for collection group query
   status: 'available' | 'occupied' | 'reserved';
 }
 

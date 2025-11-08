@@ -1,42 +1,61 @@
 'use client';
 
 import { useTranslation } from "@/hooks/use-translation";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
 import { AvailabilityCalendar } from "@/components/occupancy/availability-calendar";
 import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot, Map } from "lucide-react";
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, where } from "firebase/firestore";
+import { doc, collection, query, where, getDocs, collectionGroup } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
+import React, { useEffect, useState } from "react";
 
 export default function LocationPage({ params }: { params: { locationId: string } }) {
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    console.log('Test3')
     const locationRef = useMemoFirebase(() => doc(firestore, 'locations', params.locationId), [firestore, params.locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
     const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${params.locationId}/rooms`)), [firestore, params.locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
-    const bedsQuery = useMemoFirebase(() => {
-        if (!rooms || rooms.length === 0) return null;
-        // This is a simplified query for demonstration. For more than 30 room IDs, this will fail.
-        // A real-world scenario might require multiple queries or a different data structure.
-        const roomIds = rooms.map(r => r.id).slice(0, 30);
-        if (roomIds.length === 0) return null; // FIX: Return null if there are no rooms
-        // This path is incorrect based on backend.json, but we will fix the query logic first.
-        // A better long-term solution would be to fetch beds per room.
-        const bedsCollectionRef = collection(firestore, `locations/${params.locationId}/beds`);
-        return query(bedsCollectionRef, where('roomId', 'in', roomIds));
-    }, [firestore, params.locationId, rooms]);
+    const [beds, setBeds] = useState<Bed[]>([]);
+    const [bedsLoading, setBedsLoading] = useState(true);
 
-    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+    useEffect(() => {
+        if (!rooms) return;
+
+        const fetchBeds = async () => {
+            setBedsLoading(true);
+            if (rooms.length === 0) {
+                setBeds([]);
+                setBedsLoading(false);
+                return;
+            }
+            
+            // In Firestore, you cannot query across subcollections with a simple 'in' query on the parent ID.
+            // The best practice is to either fetch beds for each room individually or use a collection group query.
+            // Let's use a collection group query for efficiency.
+            const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', params.locationId));
+            
+            try {
+                const querySnapshot = await getDocs(bedsCollectionGroup);
+                const allBeds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bed));
+                setBeds(allBeds);
+            } catch (error) {
+                console.error("Error fetching beds:", error);
+            } finally {
+                setBedsLoading(false);
+            }
+        };
+
+        fetchBeds();
+    }, [rooms, firestore, params.locationId]);
 
     if (locationLoading || roomsLoading || bedsLoading) {
         return (
@@ -55,7 +74,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
                     <Card>
                         <CardHeader>
                            <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
-                        </CardHeader>
+                        </Header>
                         <CardContent>
                             <Skeleton className="h-40 w-full" />
                         </CardContent>

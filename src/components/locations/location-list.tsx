@@ -13,7 +13,6 @@ import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 
 export function LocationList() {
-  console.log('test 4');
   const { t } = useTranslation();
   const firestore = useFirestore();
   const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
