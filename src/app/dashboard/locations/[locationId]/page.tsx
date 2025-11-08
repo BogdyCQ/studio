@@ -4,10 +4,9 @@
 import { useMemo } from 'react';
 import { useTranslation } from "@/hooks/use-translation";
 import { notFound } from "next/navigation";
-import { OccupancyOverview } from "@/components/occupancy/occupancy-overview";
 import { AvailabilityCalendar } from "@/components/occupancy/availability-calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BedDouble, CalendarDays } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useData } from '@/components/providers/data-provider';
@@ -35,31 +34,18 @@ export default function LocationPage({ params }: { params: { locationId: string 
     if (isLoading) {
         return (
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
-                    <div className="lg:col-span-3 space-y-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                            </CardHeader>
-                            <CardContent className="h-96">
-                                <Skeleton className="h-full w-full" />
-                            </CardContent>
-                        </Card>
+                <div className="grid gap-8 grid-cols-1">
+                    <div className="space-y-4">
+                        <Skeleton className="h-8 w-1/2" />
+                        <Skeleton className="h-4 w-1/3" />
                     </div>
-                    <div className="lg:col-span-2 space-y-8">
-                        <Card>
+                    <Card className="h-96">
+                        <Skeleton className="h-full w-full" />
+                    </Card>
+                    <div className="mt-8">
+                         <Card>
                             <CardHeader>
                                 <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <Skeleton className="h-40 w-full" />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="lg:col-span-1 space-y-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <Skeleton className="h-64 w-full" />
@@ -89,24 +75,12 @@ export default function LocationPage({ params }: { params: { locationId: string 
                     <LocationMap location={location} />
                 </Card>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-                    <div className="lg:col-span-2 space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                    <div className="lg:col-span-2">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                <BedDouble /> {t('roomsAndBeds')}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <OccupancyOverview rooms={roomsForLocation} beds={bedsForLocation} />
-                            </CardContent>
-                        </Card>
-                    </div>
-                    <div className="lg:col-span-1 space-y-8">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                    <CalendarDays /> {t('availability')}
+                                    <CalendarDays /> {t('availabilityAndBooking')}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -119,3 +93,4 @@ export default function LocationPage({ params }: { params: { locationId: string 
         </div>
     );
 }
+
