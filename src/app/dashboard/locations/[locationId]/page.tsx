@@ -33,9 +33,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
             if (!firestore || !params.locationId) return;
 
             setBedsLoading(true);
-            
             const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', params.locationId));
-            
             try {
                 const querySnapshot = await getDocs(bedsCollectionGroup);
                 const allBeds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bed));
@@ -68,8 +66,8 @@ export default function LocationPage({ params }: { params: { locationId: string 
                     <div className="lg:col-span-2 space-y-8">
                         <Card>
                             <CardHeader>
-                            <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
-                            </Header>
+                                <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
+                            </CardHeader>
                             <CardContent>
                                 <Skeleton className="h-40 w-full" />
                             </CardContent>
@@ -86,8 +84,8 @@ export default function LocationPage({ params }: { params: { locationId: string 
                         </Card>
                         <Card>
                             <CardHeader>
-                            <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
-                            </Header>
+                                <CardTitle><Skeleton className="h-8 w-1/2" /></CardTitle>
+                            </CardHeader>
                             <CardContent>
                                 <Skeleton className="h-64 w-full" />
                             </CardContent>
