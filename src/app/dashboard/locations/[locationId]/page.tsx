@@ -9,30 +9,24 @@ import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, collectionGroup } from "firebase/firestore";
+import { collection, query, collectionGroup, where } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo } from "react";
-
 
 export default function LocationPage({ params }: { params: { locationId: string } }) {
     const { locationId } = params;
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    // Fetch all locations and find the current one in memory
     const locationsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collection(firestore, 'locations'));
-    }, [firestore]);
+        return query(collection(firestore, 'locations'), where('id', '==', locationId));
+    }, [firestore, locationId]);
+    const { data: locationsData, loading: locationsLoading } = useCollection<Location>(locationsQuery);
     
-    const { data: locations, loading: locationLoading } = useCollection<Location>(locationsQuery);
-
-    const location = useMemo(() => {
-        if (!locations) return null;
-        return locations.find(l => l.id === locationId);
-    }, [locations, locationId]);
+    const location = useMemo(() => (locationsData && locationsData.length > 0 ? locationsData[0] : null), [locationsData]);
 
     const roomsQuery = useMemoFirebase(() => {
         if (!firestore || !locationId) return null;
@@ -41,27 +35,21 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
     const bedsQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
+        if (!firestore || !locationId) return null;
         // Use collectionGroup to query beds across all subcollections
-        return query(collectionGroup(firestore, 'beds'));
-    }, [firestore]);
+        return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
+    }, [firestore, locationId]);
     
-    const { data: allBeds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
-    const beds = useMemo(() => {
-        if (!allBeds) return [];
-        return allBeds.filter(bed => bed.locationId === locationId);
-    }, [allBeds, locationId])
-
-
-    const isLoading = locationLoading || roomsLoading || bedsLoading;
+    const isLoading = locationsLoading || roomsLoading || bedsLoading;
     
     // After loading, if the location is not found in the array, then it's a 404
     if (!isLoading && !location) {
         notFound();
     }
 
-    if (isLoading || !location) {
+    if (isLoading) {
         return (
             <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid gap-8 grid-cols-1 lg:grid-cols-3">
@@ -106,6 +94,11 @@ export default function LocationPage({ params }: { params: { locationId: string 
                 </div>
             </div>
         );
+    }
+    
+    if (!location) {
+        // This case should be covered by the loading block and the notFound() call above, but it's a good safeguard.
+        return null; 
     }
 
     return (
