@@ -9,7 +9,7 @@ import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, where } from "firebase/firestore";
+import { doc, collection, query, where, collectionGroup } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${locationId}/rooms`)), [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
-    const bedsQuery = useMemoFirebase(() => query(collection(firestore, 'beds'), where('locationId', '==', locationId)), [firestore, locationId]);
+    const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId)), [firestore, locationId]);
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
