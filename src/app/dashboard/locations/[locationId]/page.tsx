@@ -8,12 +8,12 @@ import { AvailabilityCalendar } from "@/components/occupancy/availability-calend
 import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
-import { useDoc, useCollection, useFirestore, useMemoFirebase, errorEmitter, FirestorePermissionError } from "@/firebase";
-import { doc, collection, query, where, getDocs, collectionGroup } from "firebase/firestore";
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { doc, collection, query, getDocs } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 
 export default function LocationPage({ params }: { params: { locationId: string } }) {
     const { locationId } = params;
@@ -30,31 +30,31 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const [bedsLoading, setBedsLoading] = useState(true);
 
     useEffect(() => {
-        const fetchBeds = async () => {
-            if (!firestore || !locationId) return;
+        const fetchBedsForRooms = async () => {
+            if (!rooms) return;
 
             setBedsLoading(true);
-            const bedsCollectionGroup = query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
-            
             try {
-                const querySnapshot = await getDocs(bedsCollectionGroup);
-                const allBeds = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Bed));
+                const allBeds: Bed[] = [];
+                for (const room of rooms) {
+                    const bedsQuery = query(collection(firestore, `locations/${locationId}/rooms/${room.id}/beds`));
+                    const bedsSnapshot = await getDocs(bedsQuery);
+                    bedsSnapshot.forEach((bedDoc) => {
+                        allBeds.push({ id: bedDoc.id, ...bedDoc.data() } as Bed);
+                    });
+                }
                 setBeds(allBeds);
             } catch (error) {
-                 // Create and emit a contextual permission error
-                const permissionError = new FirestorePermissionError({
-                    path: `locations/${locationId}/rooms/.../beds`, // Representing the collection group query
-                    operation: 'list',
-                });
-                errorEmitter.emit('permission-error', permissionError);
-                console.error("Error fetching beds:", error); // Keep for local debugging, but emitter handles overlay
+                console.error("Error fetching beds:", error);
             } finally {
                 setBedsLoading(false);
             }
         };
 
-        fetchBeds();
-    }, [firestore, locationId]);
+        if (!roomsLoading) {
+            fetchBedsForRooms();
+        }
+    }, [rooms, roomsLoading, firestore, locationId]);
 
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
@@ -163,3 +163,4 @@ export default function LocationPage({ params }: { params: { locationId: string 
         </div>
     );
 }
+

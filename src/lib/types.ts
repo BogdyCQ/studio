@@ -22,12 +22,11 @@ export interface Bed {
   id: string;
   bedNumber: string;
   roomId: string;
-  locationId: string; // Add locationId for collection group query
   status: 'available' | 'occupied' | 'reserved';
 }
 
 export interface Booking {
-  id: string;
+  id:string;
   bedId: string;
   userId: string;
   startDate: string;
