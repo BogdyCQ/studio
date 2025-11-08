@@ -83,7 +83,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                <CalendarDays /> Availability & Booking
+                                <CalendarDays /> {t('availabilityAndBooking')}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
