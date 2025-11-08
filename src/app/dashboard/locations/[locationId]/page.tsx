@@ -9,53 +9,25 @@ import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, getDocs } from "firebase/firestore";
+import { doc, collection, query, where } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-export default function LocationPage({ params }: { params: Promise<{ locationId: string }> }) {
-    const { locationId } = use(params);
+export default function LocationPage({ params }: { params: { locationId: string } }) {
+    const { locationId } = params;
     const { t } = useTranslation();
     const firestore = useFirestore();
 
     const locationRef = useMemoFirebase(() => doc(firestore, 'locations', locationId), [firestore, locationId]);
     const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
 
-    const roomsQuery = useMemoFirebase(() => query(collection(firestore, `locations/${locationId}/rooms`)), [firestore, locationId]);
+    const roomsQuery = useMemoFirebase(() => query(collection(firestore, 'rooms'), where('locationId', '==', locationId)), [firestore, locationId]);
     const { data: rooms, loading: roomsLoading } = useCollection<Room>(roomsQuery);
 
-    const [beds, setBeds] = useState<Bed[]>([]);
-    const [bedsLoading, setBedsLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchBedsForRooms = async () => {
-            if (!rooms) return;
-
-            setBedsLoading(true);
-            try {
-                const allBeds: Bed[] = [];
-                for (const room of rooms) {
-                    const bedsQuery = query(collection(firestore, `locations/${locationId}/rooms/${room.id}/beds`));
-                    const bedsSnapshot = await getDocs(bedsQuery);
-                    bedsSnapshot.forEach((bedDoc) => {
-                        allBeds.push({ id: bedDoc.id, ...bedDoc.data() } as Bed);
-                    });
-                }
-                setBeds(allBeds);
-            } catch (error) {
-                console.error("Error fetching beds:", error);
-            } finally {
-                setBedsLoading(false);
-            }
-        };
-
-        if (!roomsLoading) {
-            fetchBedsForRooms();
-        }
-    }, [rooms, roomsLoading, firestore, locationId]);
-
+    const bedsQuery = useMemoFirebase(() => query(collection(firestore, 'beds'), where('locationId', '==', locationId)), [firestore, locationId]);
+    const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
     const isLoading = locationLoading || roomsLoading || bedsLoading;
 
