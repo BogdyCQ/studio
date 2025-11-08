@@ -36,7 +36,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
 
     const bedsQuery = useMemoFirebase(() => {
         if (!firestore || !locationId) return null;
-        // Use collectionGroup to query beds across all subcollections
         return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
     }, [firestore, locationId]);
     
@@ -44,7 +43,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
 
     const isLoading = locationsLoading || roomsLoading || bedsLoading;
     
-    // After loading, if the location is not found in the array, then it's a 404
     if (!isLoading && !location) {
         notFound();
     }
@@ -97,7 +95,6 @@ export default function LocationPage({ params }: { params: { locationId: string 
     }
     
     if (!location) {
-        // This case should be covered by the loading block and the notFound() call above, but it's a good safeguard.
         return null; 
     }
 
