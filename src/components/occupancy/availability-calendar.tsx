@@ -86,10 +86,7 @@ export function AvailabilityCalendar({ locationId, beds, rooms }: AvailabilityCa
           if (!dailyCounts[dayKey]) {
             dailyCounts[dayKey] = { occupied: 0, total: beds.length };
           }
-          const alreadyCounted = beds.some(b => b.id === bed.id && b.reservations?.some(r => r.id === res.id && isSameDay(day, start)));
-          if (alreadyCounted || isSameDay(day, start)) {
-             dailyCounts[dayKey].occupied += 1;
-          }
+          dailyCounts[dayKey].occupied += 1;
         });
       });
     });
@@ -158,22 +155,24 @@ export function AvailabilityCalendar({ locationId, beds, rooms }: AvailabilityCa
 
 
   return (
-    <div className="space-y-4">
-      <Calendar
-        mode="range"
-        defaultMonth={range?.from}
-        selected={range}
-        onSelect={setRange}
-        className="rounded-md border p-0"
-        disabled={{ before: today }}
-        modifiers={{ ...occupancyByDay }}
-        modifiersClassNames={{
-          low: "bg-green-500/20",
-          medium: "bg-yellow-500/20",
-          high: "bg-orange-500/20",
-          full: "bg-red-500/30 text-destructive-foreground/80",
-        }}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="flex justify-center">
+        <Calendar
+          mode="range"
+          defaultMonth={range?.from}
+          selected={range}
+          onSelect={setRange}
+          className="rounded-md border p-0"
+          disabled={{ before: today }}
+          modifiers={{ ...occupancyByDay }}
+          modifiersClassNames={{
+            low: "bg-green-500/20",
+            medium: "bg-yellow-500/20",
+            high: "bg-orange-500/20",
+            full: "bg-red-500/30 text-destructive-foreground/80",
+          }}
+        />
+      </div>
       
       {range?.from && (
         <div className="space-y-2">
@@ -184,7 +183,7 @@ export function AvailabilityCalendar({ locationId, beds, rooms }: AvailabilityCa
                 {range.to ? ` - ${format(range.to, "LLL d")}` : ''}
               </span>
             </h4>
-            <ScrollArea className="h-48 rounded-md border p-2">
+            <ScrollArea className="h-[350px] rounded-md border p-2">
                 <div className="space-y-1">
                     {bedStatuses.map(bed => (
                         <div key={bed.id} className="flex items-center justify-between text-sm p-1 rounded-md hover:bg-muted/50">

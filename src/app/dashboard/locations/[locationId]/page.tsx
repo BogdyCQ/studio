@@ -28,8 +28,9 @@ export default function LocationPage({ params }: { params: { locationId: string 
 
     const bedsForLocation = useMemo(() => {
         if (!beds || !location) return [];
-        return beds.filter(b => b.locationId === location.id);
-    }, [beds, location]);
+        const locationRoomIds = new Set(roomsForLocation.map(r => r.id));
+        return beds.filter(b => locationRoomIds.has(b.roomId));
+    }, [beds, roomsForLocation, location]);
     
     if (isLoading) {
         return (
@@ -48,7 +49,10 @@ export default function LocationPage({ params }: { params: { locationId: string 
                                 <CardTitle><Skeleton className="h-8 w-1/4" /></CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <Skeleton className="h-64 w-full" />
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <Skeleton className="h-[350px] w-full" />
+                                    <Skeleton className="h-[350px] w-full" />
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -75,22 +79,19 @@ export default function LocationPage({ params }: { params: { locationId: string 
                     <LocationMap location={location} />
                 </Card>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                    <div className="lg:col-span-2">
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center gap-2 font-headline text-2xl">
-                                    <CalendarDays /> {t('availabilityAndBooking')}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <AvailabilityCalendar locationId={location.id} beds={bedsForLocation} rooms={roomsForLocation} />
-                            </CardContent>
-                        </Card>
-                    </div>
+                <div className="mt-8">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 font-headline text-2xl">
+                                <CalendarDays /> Availability & Booking
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <AvailabilityCalendar locationId={location.id} beds={bedsForLocation} rooms={roomsForLocation} />
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </div>
     );
 }
-
