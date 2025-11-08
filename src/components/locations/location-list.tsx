@@ -2,15 +2,8 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Button } from '@/components/ui/button';
 import { MapPin, ChevronRight } from 'lucide-react';
 import type { Location } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
