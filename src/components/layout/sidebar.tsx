@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Map, List } from 'lucide-react';
+import { Map, List, History } from 'lucide-react';
 
 import { useTranslation } from '@/hooks/use-translation';
 import { Icons } from '@/components/icons';
@@ -23,6 +23,7 @@ export function DashboardSidebar() {
   const menuItems = [
     { href: '/dashboard', label: t('map'), icon: Map, exact: true },
     { href: '/dashboard/locations', label: t('locations'), icon: List },
+    { href: '/dashboard/reservations', label: t('reservations'), icon: History },
   ];
 
   return (
