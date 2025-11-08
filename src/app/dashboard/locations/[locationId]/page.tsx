@@ -8,8 +8,8 @@ import { AvailabilityCalendar } from "@/components/occupancy/availability-calend
 import { BookingTool } from "@/components/occupancy/booking-tool";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BedDouble, CalendarDays, Bot } from "lucide-react";
-import { useDoc, useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { doc, collection, query, where, collectionGroup } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where, documentId } from "firebase/firestore";
 import type { Location, Room, Bed } from "@/lib/types";
 import { LocationMap } from "@/components/locations/location-map";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,11 +20,13 @@ export default function LocationPage({ params }: { params: { locationId: string 
     const { t } = useTranslation();
     const firestore = useFirestore();
 
-    const locationRef = useMemoFirebase(() => {
+    const locationQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return doc(firestore, 'locations', locationId);
+        return query(collection(firestore, 'locations'), where(documentId(), '==', locationId));
     }, [firestore, locationId]);
-    const { data: location, loading: locationLoading } = useDoc<Location>(locationRef);
+    
+    const { data: locations, loading: locationLoading } = useCollection<Location>(locationQuery);
+    const location = locations?.[0];
 
     const roomsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
@@ -34,7 +36,7 @@ export default function LocationPage({ params }: { params: { locationId: string 
 
     const bedsQuery = useMemoFirebase(() => {
         if (!firestore) return null;
-        return query(collectionGroup(firestore, 'beds'), where('locationId', '==', locationId));
+        return query(collection(firestore, 'beds'), where('locationId', '==', locationId));
     }, [firestore, locationId]);
     const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
 
