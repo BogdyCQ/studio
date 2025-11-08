@@ -133,10 +133,15 @@
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": {
+      "oidc": {
+        "google": {
+          "enabled": true,
+          "client_id": "none",
+          "client_secret": "none"
+        }
+      }
+    }
   },
   "firestore": {
     "structure": [
@@ -232,3 +237,4 @@
     "reasoning": "The Firestore structure is designed to facilitate a clear hierarchy for managing locations, rooms, beds, and occupancy, optimizing for security, scalability, and ease of querying. Locations are stored at the root level, with rooms nested under locations, and beds nested under rooms. Occupancy records are nested under beds, providing a direct link between a bed and its occupancy history.\n\n**Authorization Independence (CRITICAL):**  Authorization is enforced via hierarchical path ownership. No `get()` calls are required, ensuring atomic operations.\n\n**Structural Segregation:** Each entity type (locations, rooms, beds, occupancies) resides in its own collection or subcollection, ensuring homogeneous security posture within each level of the hierarchy.\n\n**Access Modeling:**\n*   Path-Based ownership is implemented from locations down to beds. This means `/locations/{locationId}/rooms/{roomId}/beds/{bedId}` represents a clear ownership chain, where the existence of a document at each level implies ownership.\n*   Occupancies are secured by inheritance from the bed. Only users with access to the bed (implicitly through location and room) can access the occupancy records. Access to locations can be restricted based on user roles, if needed, by creating a top level `roles_location_admin/{uid}` collection.\n\n**QAPs:**\n*   The structure facilitates secure listing of locations, rooms, and beds because each resides in its own collection, making it easy to define security rules to filter based on location-specific criteria, or user roles (if implemented via a `roles_location_admin/{uid}` collection).\n*   The nested structure is optimized for listing occupancies as subcollections, which simplifies security rules based on the bed they belong to. If a user can access a bed, they can access its occupancies.\n\n**Invariants:** Ownership is inherently enforced by the path structure. Timestamps can be added to documents to track creation and modification times, ensuring data integrity."
   }
 }
+    

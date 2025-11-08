@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth as useAppAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/hooks/use-translation";
-import { useAuth, useIsAuthLoading } from "@/firebase";
+import { useAuth } from "@/firebase";
 import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -14,7 +14,6 @@ export default function LoginPage() {
   const { t } = useTranslation();
   const { user, loading } = useAppAuth();
   const auth = useAuth();
-  const isAuthLoading = useIsAuthLoading();
   const router = useRouter();
 
   useEffect(() => {
@@ -33,7 +32,7 @@ export default function LoginPage() {
     }
   };
 
-  if (loading || isAuthLoading || user) {
+  if (loading || user) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
              <div className="flex flex-col items-center gap-4">
