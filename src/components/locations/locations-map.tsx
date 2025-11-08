@@ -9,8 +9,6 @@ import { collection, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/use-translation';
-import { useEffect } from 'react';
-import { seedDatabase } from '@/lib/seed';
 
 
 export function LocationsMap() {
@@ -21,14 +19,6 @@ export function LocationsMap() {
 
     const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
     const { data: locations, loading } = useCollection<Location>(locationsQuery);
-
-    useEffect(() => {
-        // When loading is finished and there are no locations, seed the database.
-        if (!loading && locations && locations.length === 0) {
-            console.log('No locations found. Seeding database with new data...');
-            seedDatabase(firestore);
-        }
-    }, [locations, loading, firestore]);
 
     if (!apiKey) {
         return (
@@ -66,14 +56,7 @@ export function LocationsMap() {
                                 position={location.position}
                                 onClick={() => router.push(`/dashboard/locations/${location.id}`)}
                             >
-                                <div className="flex flex-col items-center cursor-pointer group">
-                                    <div className="flex items-center justify-center w-12 h-12 bg-primary rounded-full border-2 border-primary-foreground shadow-lg transform group-hover:scale-110 transition-transform duration-200">
-                                        <span className="text-primary-foreground font-bold text-base">
-                                            {location.occupancy}%
-                                        </span>
-                                    </div>
-                                    <div className="w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-t-8 border-t-primary transform group-hover:scale-110 transition-transform duration-200"></div>
-                                </div>
+                               <MapPin className="h-10 w-10 text-primary drop-shadow-lg cursor-pointer" fill="white" />
                             </AdvancedMarker>
                         )
                     })}
@@ -82,6 +65,3 @@ export function LocationsMap() {
         </div>
     );
 }
-
-
-

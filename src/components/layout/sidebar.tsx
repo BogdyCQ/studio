@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { MapPin, CalendarCheck } from 'lucide-react';
+import { Map, List, CalendarCheck } from 'lucide-react';
 
 import { useTranslation } from '@/hooks/use-translation';
 import { Icons } from '@/components/icons';
@@ -21,7 +21,8 @@ export function DashboardSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { href: '/dashboard', label: t('locations'), icon: MapPin },
+    { href: '/dashboard', label: t('map'), icon: Map, exact: true },
+    { href: '/dashboard/locations', label: t('locations'), icon: List },
     { href: '/dashboard/bookings', label: t('myBookings'), icon: CalendarCheck },
   ];
 
@@ -36,20 +37,26 @@ export function DashboardSidebar() {
       <SidebarSeparator />
       <SidebarContent className="p-4">
         <SidebarMenu>
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
-                tooltip={{ children: item.label }}
-              >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {menuItems.map((item) => {
+            const isActive = item.exact 
+              ? pathname === item.href 
+              : pathname.startsWith(item.href);
+            
+            return (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive}
+                  tooltip={{ children: item.label }}
+                >
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarContent>
     </Sidebar>

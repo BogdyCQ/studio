@@ -7,7 +7,6 @@ export interface Location {
     lat: number;
     lng: number;
   };
-  occupancy: number; // Percentage
   imageId: string;
   description?: string;
 }
@@ -24,6 +23,7 @@ export interface Bed {
   id: string;
   bedNumber: string;
   roomId: string;
+  locationId: string;
   status: 'available' | 'occupied' | 'reserved';
   description?: string;
 }

@@ -5,22 +5,50 @@ import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { MapPin, ChevronRight } from 'lucide-react';
-import type { Location } from '@/lib/types';
+import type { Location, Bed } from '@/lib/types';
 import { useTranslation } from '@/hooks/use-translation';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, collectionGroup, query } from 'firebase/firestore';
 import { Skeleton } from '../ui/skeleton';
+import { useEffect, useMemo } from 'react';
+import { seedDatabase } from '@/lib/seed';
 
 export function LocationList() {
   const { t } = useTranslation();
   const firestore = useFirestore();
-  const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
-  const { data: locations, loading } = useCollection<Location>(locationsQuery);
 
-  if (loading) {
+  const locationsQuery = useMemoFirebase(() => query(collection(firestore, 'locations')), [firestore]);
+  const { data: locations, loading: locationsLoading } = useCollection<Location>(locationsQuery);
+
+  const bedsQuery = useMemoFirebase(() => query(collectionGroup(firestore, 'beds')), [firestore]);
+  const { data: beds, loading: bedsLoading } = useCollection<Bed>(bedsQuery);
+  
+  useEffect(() => {
+    if (!locationsLoading && locations && locations.length === 0) {
+        console.log('No locations found. Seeding database with new data...');
+        seedDatabase(firestore);
+    }
+  }, [locations, locationsLoading, firestore]);
+
+  const locationsWithOccupancy = useMemo(() => {
+    if (!locations || !beds) return [];
+    
+    return locations.map(location => {
+      const bedsForLocation = beds.filter(bed => bed.locationId === location.id);
+      const occupiedBeds = bedsForLocation.filter(bed => bed.status === 'occupied').length;
+      const totalBeds = bedsForLocation.length;
+      const occupancy = totalBeds > 0 ? Math.round((occupiedBeds / totalBeds) * 100) : 0;
+      return { ...location, occupancy };
+    });
+  }, [locations, beds]);
+
+
+  const loading = locationsLoading || bedsLoading;
+
+  if (loading && (!locations || locations.length === 0)) {
     return (
-      <div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-headline mb-6"><Skeleton className="h-8 w-48" /></h1>
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
@@ -44,12 +72,11 @@ export function LocationList() {
   }
 
   return (
-    <div>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-headline mb-6">{t('allLocations')}</h1>
         <div className="w-full space-y-4">
-        {(locations || []).map((location) => {
+        {locationsWithOccupancy.map((location) => {
             const placeholder = PlaceHolderImages.find(p => p.id === location.imageId);
-            const occupancy = Math.floor(Math.random() * 101);
             return (
             <Link key={location.id} href={`/dashboard/locations/${location.id}`} className="block">
                 <Card className="overflow-hidden transition-shadow hover:shadow-lg p-4 hover:bg-accent/50">
@@ -74,8 +101,8 @@ export function LocationList() {
                         </div>
                         <div className="w-1/4 px-4 hidden sm:block">
                             <div className="flex items-center gap-2">
-                                <Progress value={occupancy} className="h-2" />
-                                <span className="text-sm font-medium">{occupancy}%</span>
+                                <Progress value={location.occupancy} className="h-2" />
+                                <span className="text-sm font-medium">{location.occupancy}%</span>
                             </div>
                             <p className="text-xs text-muted-foreground text-right">{t('occupancyRate')}</p>
                         </div>
