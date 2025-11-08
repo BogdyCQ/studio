@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -5,11 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth as useAppAuth } from "@/hooks/use-auth";
 import { useTranslation } from "@/hooks/use-translation";
 import { useAuth } from "@/firebase";
-import { GoogleAuthProvider, signInWithRedirect } from "firebase/auth";
+import { signInAnonymously } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Icons } from "@/components/icons";
-import { LoginHandler } from "@/components/login-handler";
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -23,13 +23,13 @@ export default function LoginPage() {
     }
   }, [user, loading, router]);
   
-  const handleSignIn = async () => {
+  const handleGuestSignIn = async () => {
     if (!auth) return;
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
+      await signInAnonymously(auth);
+      router.push('/dashboard');
     } catch (error) {
-      console.error("Error signing in with Google", error);
+      console.error("Error signing in anonymously", error);
     }
   };
 
@@ -45,7 +45,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <LoginHandler />
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <Card className="w-full max-w-sm shadow-2xl">
           <CardHeader className="text-center">
@@ -56,9 +55,8 @@ export default function LoginPage() {
             <CardDescription className="pt-2">{t('signIn')}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={handleSignIn} className="w-full" variant="default" size="lg">
-              <Icons.google className="h-6 w-6 mr-2" />
-              {t('signInWithGoogle')}
+            <Button onClick={handleGuestSignIn} className="w-full" variant="default" size="lg">
+              {t('enterAsGuest')}
             </Button>
           </CardContent>
         </Card>

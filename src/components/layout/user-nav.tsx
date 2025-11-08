@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -44,7 +45,7 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-9 w-9 rounded-full">
           <Avatar className="h-9 w-9">
-            {user.photoURL && <AvatarImage src={user.photoURL} alt={displayName || 'User'} />}
+            {user.photoURL && !isAnonymous && <AvatarImage src={user.photoURL} alt={displayName || 'User'} />}
             <AvatarFallback>
               {isAnonymous ? <User className="h-5 w-5"/> : displayName?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
