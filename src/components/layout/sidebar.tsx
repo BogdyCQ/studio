@@ -1,0 +1,56 @@
+"use client";
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { MapPin } from 'lucide-react';
+
+import { useTranslation } from '@/hooks/use-translation';
+import { Icons } from '@/components/icons';
+import {
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarSeparator
+} from '@/components/ui/sidebar';
+
+export function DashboardSidebar() {
+  const { t } = useTranslation();
+  const pathname = usePathname();
+
+  const menuItems = [
+    { href: '/dashboard', label: t('locations'), icon: MapPin },
+  ];
+
+  return (
+    <Sidebar className="border-r hidden md:flex">
+      <SidebarHeader className="p-4">
+        <Link href="/dashboard" className="flex items-center gap-2">
+            <Icons.logo className="h-8 w-8 text-primary" />
+            <span className="font-headline text-xl font-semibold">{t('appName')}</span>
+        </Link>
+      </SidebarHeader>
+      <SidebarSeparator />
+      <SidebarContent className="p-4">
+        <SidebarMenu>
+          {menuItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <SidebarMenuButton
+                asChild
+                isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
+                tooltip={{ children: item.label }}
+              >
+                <Link href={item.href}>
+                  <item.icon />
+                  <span>{item.label}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarContent>
+    </Sidebar>
+  );
+}

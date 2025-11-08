@@ -1,3 +1,28 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "amsterdam",
+      "description": "A view of Amsterdam canals.",
+      "imageUrl": "https://images.unsplash.com/photo-1625826560092-fc14d19cd40f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhbXN0ZXJkYW0lMjBjYW5hbHxlbnwwfHx8fDE3NjI1ODg5MzR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "amsterdam canal"
+    },
+    {
+      "id": "rotterdam",
+      "description": "Modern architecture in Rotterdam.",
+      "imageUrl": "https://images.unsplash.com/photo-1578155427826-c26847df03ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxyb3R0ZXJkYW0lMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYyNTg4OTMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rotterdam architecture"
+    },
+    {
+      "id": "utrecht",
+      "description": "The Dom Tower in Utrecht.",
+      "imageUrl": "https://images.unsplash.com/photo-1724239436219-f7a16685d195?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx1dHJlY2h0JTIwY2l0eXxlbnwwfHx8fDE3NjI1ODg5Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "utrecht city"
+    },
+    {
+      "id": "hero",
+      "description": "Abstract architecture showing spaces.",
+      "imageUrl": "https://images.unsplash.com/photo-1615406020658-6c4b805f1f30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtb2Rlcm4lMjBhcmNoaXRlY3R1cmV8ZW58MHx8fHwxNzYyNTA3NDE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern architecture"
+    }
+  ]
 }
