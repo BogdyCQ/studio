@@ -83,15 +83,14 @@ export const useDoc = <T,>(docRef: DocumentReference<DocumentData> | null | unde
         setLoading(false);
       },
       (err: FirestoreError) => {
-        console.error(`[use-doc] Error listening to document at path: ${docRef.path}.`, err);
-
+        // Do not log the error here, as the listener will throw it.
         const permissionError = new FirestorePermissionError({
           path: docRef.path,
           operation: 'get',
         });
         errorEmitter.emit('permission-error', permissionError);
 
-        setError(err);
+        setError(err); // Still set local error state for component-level handling
         setLoading(false);
       }
     );

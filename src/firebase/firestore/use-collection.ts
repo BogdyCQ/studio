@@ -97,13 +97,13 @@ export const useCollection = <T,>(
         setLoading(false);
       },
       (err: FirestoreError) => {
-        console.error(`[use-collection] Error listening to collection at path: ${queryOrRef.path}. `, err);
+        // Do not log the error here, as the listener will throw it.
         const permissionError = new FirestorePermissionError({
           path: (queryOrRef as CollectionReference).path,
           operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
-        setError(err);
+        setError(err); // Still set local error state for component-level handling
         setLoading(false);
       }
     );
