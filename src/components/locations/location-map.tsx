@@ -4,11 +4,9 @@
 import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 import type { Location } from '@/lib/types';
 import { MapPin } from 'lucide-react';
-import getConfig from 'next/config';
 
 export function LocationMap({ location }: { location: Location }) {
-    const { publicRuntimeConfig } = getConfig();
-    const apiKey = publicRuntimeConfig.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
     if (!apiKey) {
         return (
